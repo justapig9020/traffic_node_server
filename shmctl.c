@@ -1,0 +1,128 @@
+#include <sys/shm.h>
+#include "shmctl.h"
+#include "syn.h"
+
+static void *creat_shm(key_t);
+static void *get_shm(key_t);
+static int del_shm(key_t, int);
+
+static void *creat_shm (key_t key)
+{
+    int id;
+    void *addr;
+    int size;
+    size = getpagesize ();
+
+    id = shmget (key, size, 0644 | IPC_CREAT | IPC_EXCL);
+    if (id == -1)
+        return (void *)-1;
+    addr = shmat (id, NULL, 0);
+    memset (addr, size, 0);
+    return addr;
+}
+
+static void *get_shm (key_t key)
+{
+    int id;
+    int size;
+    size = getpagesize ();
+
+    id = shmget (key, size, 0644 | IPC_CREAT);
+    if (id == -1)
+        return (void *)-1;
+    return shmat (id, NULL, 0);
+}
+
+static int del_shm(key_t key)
+{
+    int shmid;
+    int size;
+    size = getpagesize ();
+
+    shmid = shmget (key, size, 0644);
+    if (shmid == -1)
+        return -1;
+
+    if (shmctl (shmid, IPC_RMID, 0) == -1)
+        return -1;
+    return 0;
+}
+
+struct shmpg *creat_shmpg(key_t key, in_addr_t *ip, int num)
+{
+    struct shmpg *shm;
+
+    shm = (struct shmpg *)creat_shm (key);
+    if (shm == (struct shmpg*)-1) {
+        perror ("Create shared memory failed:");
+        exit (-1);
+    }
+    
+    shm->key = key;
+    shm->end = (void *)((int)shm + getpagesize () - 1);
+    shm->nextPg = NULL;
+    shm->adjNum = num;
+
+    for (int i=0; i<BIN_TYPES; i++) {
+        shm->chunk[i] = NULL;
+    }
+
+    for (int i=0; i<num; i++) {
+        init_rwlock (&(shm->adj[i].lock), RL_KEY+i, WL_KEY+i, PW_KEY+i);
+        shm->adj[i].ip = ip[i];
+        //shm->adj[i].data = NULL; // if shtmalloc practiced
+        shm->adj[i].data.rate = 0;
+        shm->adj[i].data.next = NULL; 
+    }
+
+    shm->hPtr  = (void *)((int)(shm) + 
+                        sizeof(struct shmpg) + 
+                        sizeof(struct adj)*(num-1));
+
+    return shm;
+}
+
+struct shmpg *get_shmpg(key_t key)
+{
+    struct *shm;
+    shm = (struct shmpg *)get_shm (key);
+    if (shm == (struct)) {
+        perror ("Get shared memory failed:");
+        exit (-1);
+    }
+    
+    return shm;
+}
+
+int push_data(const struct data, struct node *target)
+{
+    rw_wrt (target->lock);
+    target->data = data;
+    rw_wrt_end (target->lock);
+}
+
+struct data pop_data(struct node* target)
+{   
+    struct data ret;
+    rw_rd (target->node);
+    ret = target->data;
+    rw_rd_end (target->node);
+    return ret;
+}
+
+int del_shmpg(struct shmpg *shm)
+{
+    key_t key;
+    key = shm->key;
+    if (shmdt (shm) == -1) {
+        perror ("Detach shared memory failed:");
+        exit (-1);
+    }
+
+    if (del_shm (key) == -1) {
+        perror ("Delete shared memory failed:");
+        exit (-1);
+    }
+    
+    return 0;
+}
