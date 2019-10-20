@@ -1,18 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h> // for bzero
+#include <netinet/in.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 #include "server.h"
-#include "syn.h"
+#include "shmctl.h"
 
-int server_init (char *ip, int num)
+static int init_server();
+static int server_op(const struct data);
+static void server_active(int, struct shmpg *);
+
+
+int init_server()
 {
-    char inBuf;
-    int sockFd = 0;
+    int sockFd;
     struct sockaddr_in serverInfo;
     sockFd = socket (AF_INET , SOCK_DGRAM , 0);
-    inBuf = malloc (1024);
     if (sockFd == -1){
         perror ("Socket create failed:");
         return -1;
@@ -24,7 +31,7 @@ int server_init (char *ip, int num)
     serverInfo.sin_addr.s_addr = htonl (INADDR_ANY);
     serverInfo.sin_port = htons (SER_PORT);
 
-    if (bind (sockfd, (struct sockaddr *)&serverInfo, sizeof (serverInfo)) == -1) {
+    if (bind (sockFd, (struct sockaddr *)&serverInfo, sizeof (serverInfo)) == -1) {
         perror ("Socket bind failed:");
         return -1;
     }
@@ -32,78 +39,103 @@ int server_init (char *ip, int num)
     return sockFd;
 }
 
-
-static inline void
-
-static inline void push_data (const struct data d, struct adj *node)
+int server_op(const struct data d)
 {
-    rw_wrt (node->lock);
-    node->data = d;
-    rw_wrt_end (node->lock);
+    return 0;
 }
 
-static void server_active(int sd, in_addr_t *ip, int num)
+void server_active(int sd, struct shmpg *shm)
 {
-    struct shmpg *shm;
     struct sockaddr_in clt_addr;
     struct data d;
     int clt_len;
     
-    shm = creat_shmpg (SHM_KEY, num);
+
     clt_len = sizeof(struct sockaddr_in);
+
     while (1) {
         int i;
-        in_addr_t ipBuf;
+
         bzero (&d, sizeof(struct data));
         recvfrom (sd, &d, sizeof(struct data), 0, (struct sockaddr *)&clt_addr, &clt_len);
-        for (i=0; i<num; i++) {
-            if (clt_addr.sin_addr == ip[i])
+
+        for (i=0; i<shm->adjNum; i++) {
+            if (clt_addr.sin_addr.s_addr == shm->adj[i].ip)
                 break;
         }
-        if (i != num) {
-            push_data (d, &(shm->node[i]));
+
+        if (i != shm->adjNum) {
+            push_data (d, &(shm->adj[i]));
         } else {
-            server_operation (d);
+            server_op (d);
+            break;
         }
     }
-    shmdt (shm);
-    del_shm ()
+
+    del_shmpg (shm);
+    shm = NULL;
 }
 
-int server_run(int sd)
+struct shmpg *exec_server()
 {
+    struct shmpg *shm;
     FILE *fd;
-    pid_t id;
     int n;
-    
+    int sd;
+    pid_t id;
     in_addr_t *ip;
+    
+    if (sd == -1) {
+        return (struct shmpg *)-1;
+    }
+
     fd = fopen ("./adj_table", "r");
-    if (!fd) { perror ("adj_table open failed:");
-        return -1;
+    if (!fd) {
+        perror ("adj_table open failed:");
+        return (struct shmpg *)-1;
     }
     
     fscanf (fd, "%d", &n);
     ip = malloc (sizeof(in_addr_t)*n);
+
     for (int i=0; i<n; i++) {
         char c[16];
         scanf ("%s", c);
         ip[i] = inet_addr (c);
     }
+
     fclose (fd);
     fd = NULL;
     
+    shm = creat_shmpg (SHM_KEY_BS, ip, n);
+    if (shm == (struct shmpg *)-1) {
+        perror ("creat shared memory failed:");
+        return (struct shmpg *) -1;       
+    }
+    free (ip);
+    ip = NULL;
+
+    sd = init_server ();
+
     id = fork ();
     if (id == -1) {
         perror ("Fork server process failed:");
-        free (ip);
-        ip = NULL;
-        return -1;
+        del_shmpg (shm);
+        return (struct shmpg *)-1;
     }
 
     if (id == 0) {
-        server_active (sd, ip, n);
-    } else {
-        printf ("Run server @ pid: %d\n", id);
+        /*
+           New process for packground server
+        */ 
+        server_active (sd, shm);
+        shm = NULL;
+
+        close (sd);
+        exit (0);
     }
-    return 0;
+
+    printf ("Run server @ pid: %d\n", id);
+
+    return shm;
 }
