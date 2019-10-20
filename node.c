@@ -6,6 +6,7 @@
 
 #include "shmctl.h"
 #include "server.h"
+#include "debug.h"
 
 static struct shmpg *shm = NULL;
 static int cltFd = -1;
@@ -52,14 +53,19 @@ struct data recv_d(int n)
 
 int start_server()
 {
+    dbg ("starting server");
     shm = exec_server ();
     if (shm == (struct shmpg *) -1) {
+        dbg ("start server failed");
         return -1;
     }
+    dbg ("Server started");
+    return 0;
 }
 
 int stop_server()
 {
+    dbg ("stoping server");
     struct data d;
     if (shm == NULL) {
         fprintf (stderr, "Server doesnt active\n");
@@ -71,11 +77,7 @@ int stop_server()
         fprintf (stderr, "@ stop server\n");
         return -1;
     }
+    dbg ("servers stoped");
 
-    return 0;
-}
-
-int main(void)
-{
     return 0;
 }

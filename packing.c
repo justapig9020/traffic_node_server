@@ -8,8 +8,8 @@ static struct PyModuleDef traf_node_module;
 static PyMethodDef traf_node_methods[];
 static PyObject *_send_d(PyObject *, PyObject *);
 static PyObject *_recv_d(PyObject *, PyObject *);
-static PyObject *_start_server(PyObject *, PyObject *);
-static PyObject *_stop_server(PyObject *, PyObject *);
+static PyObject *_start_server(PyObject *);
+static PyObject *_stop_server(PyObject *);
 
 PyMODINIT_FUNC PyInit_traf_node() 
 {

@@ -2,7 +2,7 @@
 #define _SERVER_H_
 
 #include "shmctl.h"
-#define SER_PORT 8787
+#define SER_PORT 1234 
 #define ADJ_TABLE "adj_table"
 
 struct shmpg *exec_server();

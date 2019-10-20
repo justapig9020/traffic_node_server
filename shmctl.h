@@ -45,11 +45,12 @@ struct shmpg {
 };
 
 
-struct shmpg *creat_shmpg(key_t, in_addr_t *, int num);
+struct shmpg *creat_shmpg(key_t, int num);
 struct shmpg *get_shmpg(key_t);
 int push_data(const struct data, struct node *);
 struct data pop_data(struct node *);
 int del_shmpg(struct shmpg *);
+int clr_del_shmpg(key_t);
 
 /* 
    TODO

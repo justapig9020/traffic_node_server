@@ -9,6 +9,7 @@
 
 #include "server.h"
 #include "shmctl.h"
+#include "debug.h"
 
 static int init_server();
 static int server_op(const struct data);
@@ -17,6 +18,7 @@ static void server_active(int, struct shmpg *);
 
 int init_server()
 {
+    dbg ("server initing");
     int sockFd;
     struct sockaddr_in serverInfo;
     sockFd = socket (AF_INET , SOCK_DGRAM , 0);
@@ -35,7 +37,7 @@ int init_server()
         perror ("Socket bind failed:");
         return -1;
     }
-
+    dbg ("server inited");
     return sockFd;
 }
 
@@ -46,9 +48,10 @@ int server_op(const struct data d)
 
 void server_active(int sd, struct shmpg *shm)
 {
+    dbg ("server active");
     struct sockaddr_in clt_addr;
     struct data d;
-    int clt_len;
+    socklen_t clt_len;
     
 
     clt_len = sizeof(struct sockaddr_in);
@@ -78,16 +81,12 @@ void server_active(int sd, struct shmpg *shm)
 
 struct shmpg *exec_server()
 {
+    dbg ("exec server");
     struct shmpg *shm;
     FILE *fd;
     int n;
     int sd;
     pid_t id;
-    in_addr_t *ip;
-    
-    if (sd == -1) {
-        return (struct shmpg *)-1;
-    }
 
     fd = fopen ("./adj_table", "r");
     if (!fd) {
@@ -96,26 +95,30 @@ struct shmpg *exec_server()
     }
     
     fscanf (fd, "%d", &n);
-    ip = malloc (sizeof(in_addr_t)*n);
+    printf ("Adj node number: %d\n", n);
+
+    shm = creat_shmpg (SHM_KEY_BS, n);
+    if (shm == (struct shmpg *)-1) {
+        perror ("creat shared memory failed:");
+        return (struct shmpg *) -1;       
+    }
 
     for (int i=0; i<n; i++) {
         char c[16];
-        scanf ("%s", c);
-        ip[i] = inet_addr (c);
+        printf ("node %d ", i);
+        fscanf (fd, "%s", c);
+        printf ("ip: %s\n", c);
+        shm->adj[i].ip = inet_addr (c);
     }
 
     fclose (fd);
     fd = NULL;
     
-    shm = creat_shmpg (SHM_KEY_BS, ip, n);
-    if (shm == (struct shmpg *)-1) {
-        perror ("creat shared memory failed:");
-        return (struct shmpg *) -1;       
-    }
-    free (ip);
-    ip = NULL;
-
     sd = init_server ();
+
+    if (sd == -1) {
+        return (struct shmpg *)-1;
+    }
 
     id = fork ();
     if (id == -1) {
