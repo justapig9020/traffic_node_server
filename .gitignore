@@ -1,6 +1,6 @@
 *
 !*.c
 !*.h
-!setup.py
+!*.py
 !Makefile
 !.gitignore
