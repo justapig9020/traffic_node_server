@@ -4,3 +4,4 @@
 !*.py
 !Makefile
 !.gitignore
+!*.sh
