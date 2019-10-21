@@ -11,10 +11,10 @@
 typedef int mut_t;
 
 /*
-    struct of r/w lock
-    Read request not accept when writer waiting for write 
-    until write process terminatdd 
-*/
+ *  struct of r/w lock
+ *  Read request not accept when writer waiting for write 
+ *  until write process terminatdd 
+ */
 struct rwlock {
     int rNum;       // Number of reader
     mut_t rlock;
@@ -23,8 +23,8 @@ struct rwlock {
 };
 
 /*
-   mutex lock operations
-*/
+ *  mutex lock operations
+ */
 mut_t creat_mut (key_t);
 mut_t get_mut (key_t);
 int mut_lock (mut_t); 
@@ -32,8 +32,8 @@ int mut_rel (mut_t);
 int del_mut (mut_t);
 
 /*
-   r/w lock operations
-*/
+ *  r/w lock operations
+ */
 int init_rwlock (struct rwlock*, key_t, key_t, key_t);
 int rw_rd (struct rwlock*);
 int rw_wrt (struct rwlock*);

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <netinet/in.h>
 
 #include "shmctl.h"
@@ -65,6 +66,9 @@ int start_server()
 
 int stop_server()
 {
+    pid_t id;
+    int s;
+
     dbg ("stoping server");
     struct data d;
     if (shm == NULL) {
@@ -78,6 +82,9 @@ int stop_server()
         return -1;
     }
     dbg ("servers stoped");
+    id = wait (&s);
 
-    return 0;
+    del_shmpg (shm);
+    shm = NULL;
+    return id;
 }

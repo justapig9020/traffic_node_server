@@ -6,14 +6,6 @@
 #include <sys/ipc.h> 
 #include "syn.h"
 
-#define DEBUG 0
-
-#if DEBUG
-    #define debug(x) puts (x) 
-#else
-    #define debug(x)
-#endif
-
 union semun {
     int              val;    /* Value for SETVAL */
     struct semid_ds *buf;    /* Buffer for IPC_STAT, IPC_SET */
@@ -26,34 +18,35 @@ mut_t creat_mut (key_t key)
 {
     int id;
     union semun sem_union;
-    id = semget(key, 1, 0666 | IPC_CREAT | IPC_EXCL);
+    id = semget(key, 1, 0644 | IPC_CREAT | IPC_EXCL);
+
     if (id == -1)
         return -1;
+
     sem_union.val = 1;
     if (semctl(id, 0, SETVAL, sem_union) == -1) {
         return -1;
     }
+
     return id;
 }
 
 mut_t get_mut (key_t key)
 {
-    return semget(key, 1, 0666 | IPC_CREAT);
+    return semget(key, 1, 0644 | IPC_CREAT);
 }
 
 int mut_lock (mut_t mid)
 {
     struct sembuf sem_b;
+
     sem_b.sem_num = 0;
     sem_b.sem_op = -1;
     sem_b.sem_flg = SEM_UNDO;
 
-    debug ("locking");
     if (semop(mid, &sem_b, 1) == -1) {
-        perror("semaphore_p lock failed");
         return -1;
     }
-    debug ("locked");
     return 0;
 }
 
@@ -64,12 +57,10 @@ int mut_rel (mut_t mid)
     sem_b.sem_op = 1;
     sem_b.sem_flg = SEM_UNDO;
 
-    debug ("releasing");
     if (semop(mid, &sem_b, 1) == -1) {
-        perror("semaphore_p rel failed");
         return -1;
     }
-    debug ("released");
+
     return 0;
 }
 
@@ -80,12 +71,10 @@ int mut_wait (mut_t mid)
     sem_b.sem_op = 1;
     sem_b.sem_flg = 0;
 
-    debug ("waiting");
     if (semop(mid, &sem_b, 1) == -1) {
-        perror("semaphore_p wait failed");
         return -1;
     }
-    debug ("got it");
+
     return 0;
 }
 

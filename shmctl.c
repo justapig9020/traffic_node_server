@@ -7,6 +7,8 @@
 #include "shmctl.h"
 #include "syn.h"
 
+typedef uint32_t addrop_t;
+
 static void *creat_shm(key_t);
 static void *get_shm(key_t);
 static int del_shm(key_t);
@@ -70,9 +72,10 @@ struct shmpg *creat_shmpg(key_t key, int num)
     if (shm == (struct shmpg*)-1) {
         return (struct shmpg *)-1;
     }
+
     shm->alive = 0;
     shm->key = key;
-    shm->end = (void *)((int)shm + getpagesize () - 1);
+    shm->end = (void *)((addrop_t)shm + getpagesize () - 1);
     shm->nextPg = NULL;
     shm->adjNum = num;
 
@@ -87,7 +90,7 @@ struct shmpg *creat_shmpg(key_t key, int num)
         shm->adj[i].data.next = NULL; 
     }
 
-    shm->hPtr  = (void *)((int)(shm) + 
+    shm->hPtr  = (void *)((addrop_t)(shm) + 
                         sizeof(struct shmpg) + 
                         sizeof(struct node)*(num-1));
     shm->alive = 1;
@@ -105,9 +108,9 @@ struct shmpg *get_shmpg(key_t key)
         return (struct shmpg *) -1;
     }
 
-    /*if (shm->alive == 0)
+    if (shm->alive == 0)
         return (struct shmpg *)-1;
-    */
+    
     return shm;
 }
 
@@ -132,26 +135,44 @@ struct data pop_data(struct node* target)
 
 int del_shmpg(struct shmpg *shm)
 {
-    key_t key;
+    int off;
+    int ret;
+
+    ret = 0;
+    off = shm->key - SHM_KEY_BS;
 
     dbg ("del shmpg");
     shm->alive = 0;
-    key = shm->key;
     if (shmdt (shm) == -1) {
         perror ("Detach shared memory failed:");
-        return -1;
+        ret = -1;
     }
 
     dbg ("dted shmpg");
-
-    if (del_shm (key) == -1) {
+    if (del_shm (SHM_KEY_BS + off) == -1) {
         perror ("Delete shared memory failed:");
-        return -1;
+        ret = -1;
     }
     
-    dbg ("deled shmpg");
+    dbg ("del rl");
+    if (del_mut (RL_KEY_BS + off) == -1) {
+        perror ("Delete RL failed");
+        ret = -1;
+    }
+    
+    dbg ("del wl");
+    if (del_mut (WL_KEY_BS + off) == -1) {
+        perror ("Delete WL failed");
+        ret = -1;
+    }
 
-    return 0;
+    dbg ("del pw");
+    if (del_mut (PW_KEY_BS + off) == -1) {
+        perror ("Delete PW failed");
+        ret = -1;
+    }
+
+    return ret;
 }
 
 int clr_del_shmpg(key_t key)

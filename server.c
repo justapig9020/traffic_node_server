@@ -23,7 +23,7 @@ int init_server()
     struct sockaddr_in serverInfo;
     sockFd = socket (AF_INET , SOCK_DGRAM , 0);
     if (sockFd == -1){
-        perror ("Socket create failed:");
+        perror ("Socket create failed");
         return -1;
     }
 
@@ -34,7 +34,7 @@ int init_server()
     serverInfo.sin_port = htons (SER_PORT);
 
     if (bind (sockFd, (struct sockaddr *)&serverInfo, sizeof (serverInfo)) == -1) {
-        perror ("Socket bind failed:");
+        perror ("Socket bind failed");
         return -1;
     }
     dbg ("server inited");
@@ -63,6 +63,15 @@ void server_active(int sd, struct shmpg *shm)
         recvfrom (sd, &d, sizeof(struct data), 0, (struct sockaddr *)&clt_addr, &clt_len);
         
         dbg_arg ("ip_in: %d\n", clt_addr.sin_addr.s_addr);
+        dbg_arg ("ANY: %d\n", htonl (INADDR_ANY));
+        if (clt_addr.sin_addr.s_addr == 16777343) { // Server contral operation
+            int ret;
+
+            ret = server_op (d);
+            if (ret == 0) // Stop server
+                break;
+            continue;
+        }
         for (i=0; i<shm->adjNum; i++) {
             dbg_arg ("ip %d: %d\n", i, shm->adj[i].ip);
             if (clt_addr.sin_addr.s_addr == shm->adj[i].ip)
@@ -72,13 +81,8 @@ void server_active(int sd, struct shmpg *shm)
         dbg_arg ("i: %d\n", i);
         if (i != shm->adjNum) {
             push_data (d, &(shm->adj[i]));
-        } else {
-            server_op (d);
-            break;
         }
     }
-    del_shmpg (shm);
-    shm = NULL;
 }
 
 struct shmpg *exec_server()
@@ -125,7 +129,9 @@ struct shmpg *exec_server()
     id = fork ();
     if (id == -1) {
         perror ("Fork server process failed:");
-        del_shmpg (shm);
+        if (del_shmpg (shm) == -1) {
+            dbg ("del shmpg failed");
+        }
         return (struct shmpg *)-1;
     }
 
@@ -136,13 +142,22 @@ struct shmpg *exec_server()
         server_active (sd, shm);
         shm = NULL;
 
-        close (sd);
-        sd = NULL;
+        if (close (sd) == -1) {
+            perror ("close server failed:");
+        }
+        sd = -1;
+        del_shmpg (shm);
+        shm = NULL;
 
         exit (0);
     }
 
     printf ("Run server @ pid: %d\n", id);
+
+    if (close (sd) == -1) {
+        perror ("close server failed:");
+    }
+    sd = -1;
 
     return shm;
 }

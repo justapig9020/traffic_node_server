@@ -6,11 +6,11 @@
 #include "syn.h"
 
 #define SHM_KEY_BS (key_t)100
-#define BIN_TYPES 1
+#define BIN_TYPES 1             // Number of bin types
 
 /*
-    Recycled structs will translate to bin
-*/
+ *  Recycled structs will translate to bin
+ */
 struct bin {
     struct bin *next;
 };
@@ -21,8 +21,8 @@ struct data {
 };
 
 /*
-    Adjacent nodes info
-*/ 
+ *  Adjacent nodes info
+ */ 
 struct node {
     in_addr_t ip;
     struct rwlock lock;
@@ -44,12 +44,45 @@ struct shmpg {
     struct node adj[1];            // Array of adjacent nodes info
 };
 
-
+/* 
+ *  Create a shared memory page
+ *  Return value:
+ *      On success return the pointer to the allocated memory address
+ *      On error return -1 and errno is set appropriately
+ */
 struct shmpg *creat_shmpg(key_t, int num);
+
+/*
+ *  Get a shared memory page which has been create 
+ *  Return value:
+ *      On success return the pointer to the allocated memory address
+ *      On error return -1 and errno is set appropriately
+ */
 struct shmpg *get_shmpg(key_t);
+
+/*
+ *  Push a data in to stack of specific adjacent node
+ *  Return value:
+ *      return 0;
+ */ 
 int push_data(const struct data, struct node *);
+
+/*
+ *  Pop a data from the stack of specific adjacentnode
+ *  Return value:
+ *      data
+ */ 
 struct data pop_data(struct node *);
+
+/*
+ *  Delete a shared memory page
+ *  Return value:
+ *      On success return 0
+ *      On error print all erron and return -1
+ */
 int del_shmpg(struct shmpg *);
+
+/* Del_shmpg just for clr*/
 int clr_del_shmpg(key_t);
 
 /* 
