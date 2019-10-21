@@ -61,12 +61,15 @@ void server_active(int sd, struct shmpg *shm)
 
         bzero (&d, sizeof(struct data));
         recvfrom (sd, &d, sizeof(struct data), 0, (struct sockaddr *)&clt_addr, &clt_len);
-
+        
+        dbg_arg ("ip_in: %d\n", clt_addr.sin_addr.s_addr);
         for (i=0; i<shm->adjNum; i++) {
+            dbg_arg ("ip %d: %d\n", i, shm->adj[i].ip);
             if (clt_addr.sin_addr.s_addr == shm->adj[i].ip)
                 break;
         }
 
+        dbg_arg ("i: %d\n", i);
         if (i != shm->adjNum) {
             push_data (d, &(shm->adj[i]));
         } else {
@@ -74,7 +77,6 @@ void server_active(int sd, struct shmpg *shm)
             break;
         }
     }
-
     del_shmpg (shm);
     shm = NULL;
 }
@@ -135,6 +137,8 @@ struct shmpg *exec_server()
         shm = NULL;
 
         close (sd);
+        sd = NULL;
+
         exit (0);
     }
 
