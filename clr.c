@@ -8,7 +8,7 @@ int main(void)
     struct shmpg *shm;
 
     puts ("Del shmpg");
-    if (clr_del_shmpg (SHM_KEY_BS) == -1) {
+    if (clr_shmpg (SHM_KEY_BS) == -1) {
         perror ("del shmpg:");
     }
  

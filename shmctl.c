@@ -11,7 +11,7 @@ typedef uint64_t addrop_t;
 
 static void *creat_shm(key_t);
 static void *get_shm(key_t);
-static int del_shm(key_t);
+int clr_shmpg(key_t);
 
 void *creat_shm (key_t key)
 {
@@ -114,6 +114,33 @@ struct shmpg *get_shmpg(key_t key)
     return shm;
 }
 
+int clr_shmg_cont()
+{
+    int ret = 0;
+
+    if (clr_shmpg (SHM_KEY_BS) == -1) {
+        perror ("del shmpg:");
+        ret = -1;
+    }
+ 
+    if (del_mut (RL_KEY_BS) == -1) {
+        perror ("del rl mut");
+        ret = -1;
+    }
+
+    if (del_mut (WL_KEY_BS) == -1) {
+        perror ("del wl mut");
+        ret = -1;
+    }
+
+    if (del_mut (PW_KEY_BS) == -1) {
+        perror ("del pw mut");
+        ret = -1;
+    }
+
+    return ret;
+}
+
 int push_data(const struct data d, struct node *target)
 {
     rw_wrt (&(target->lock));
@@ -176,7 +203,7 @@ int del_shmpg(struct shmpg *shm)
     return ret;
 }
 
-int clr_del_shmpg(key_t key)
+int clr_shmpg(key_t key)
 {
     struct shmpg *shm;
     shm = get_shmpg(key);

@@ -14,7 +14,7 @@
 static int init_server();
 static int server_op(const struct data);
 static void server_active(int, struct shmpg *);
-
+static int clr_server();
 
 int init_server()
 {
@@ -85,6 +85,32 @@ void server_active(int sd, struct shmpg *shm)
     }
 }
 
+int clr_server()
+{
+    struct data d;
+    int cltFd;
+    struct sockaddr_in serInfo;
+
+    d.rate = -1;
+    d.next = NULL;
+
+    cltFd = socket (AF_INET, SOCK_DGRAM, 0);
+    if (cltFd == -1) {
+        perror ("Creat socket in clr_server:");
+        return -1;
+    }
+
+    bzero (&serInfo, sizeof(struct sockaddr_in));
+    serInfo.sin_family = AF_INET;
+    serInfo.sin_port = htons (SER_PORT);
+
+    serInfo.sin_addr.s_addr = htonl(INADDR_ANY);
+
+    sendto (cltFd, &d, sizeof(struct data), 0, (struct sockaddr *)&serInfo, sizeof(struct sockaddr));
+
+    return 0;
+}
+
 struct shmpg *exec_server()
 {
     dbg ("exec server");
@@ -102,11 +128,17 @@ struct shmpg *exec_server()
     
     fscanf (fd, "%d", &n);
     printf ("Adj node number: %d\n", n);
+    while (1) {
+        puts ("Create shmpg");
+        shm = creat_shmpg (SHM_KEY_BS, n);
 
-    shm = creat_shmpg (SHM_KEY_BS, n);
-    if (shm == (struct shmpg *)-1) {
-        perror ("creat shared memory failed:");
-        return (struct shmpg *) -1;       
+        if (shm == (struct shmpg *)-1) {
+            perror ("creat shared memory failed:");
+            puts ("Clear shmpg");
+            clr_shmg_cont ();
+        } else {
+            break;
+        }
     }
 
     for (int i=0; i<n; i++) {
@@ -120,10 +152,21 @@ struct shmpg *exec_server()
     fclose (fd);
     fd = NULL;
     
-    sd = init_server ();
+    while (1) {
+        puts ("Init server");
+        sd = init_server ();
 
-    if (sd == -1) {
-        return (struct shmpg *)-1;
+        if (sd == -1) {
+            int ret = 0;
+
+            puts ("Clear server");
+            ret = clr_server ();
+            dbg_arg ("clr_server ret: %d\n", ret);
+
+            usleep (1);
+        } else {
+            break;
+        }
     }
 
     id = fork ();
@@ -137,7 +180,7 @@ struct shmpg *exec_server()
 
     if (id == 0) {
         /*
-           New process for packground server
+           New process for background server
         */ 
         server_active (sd, shm);
         shm = NULL;

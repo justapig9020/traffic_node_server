@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include <netinet/in.h>
 
-#include "shmctl.h"
+#include "shmctl.h" 
 #include "server.h"
 #include "debug.h"
 
@@ -68,9 +68,9 @@ int stop_server()
 {
     pid_t id;
     int s;
+    struct data d;
 
     dbg ("stoping server");
-    struct data d;
     if (shm == NULL) {
         fprintf (stderr, "Server doesnt active\n");
         return -1;

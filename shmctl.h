@@ -60,6 +60,7 @@ struct shmpg *creat_shmpg(key_t, int num);
  */
 struct shmpg *get_shmpg(key_t);
 
+int clr_shmg_cont();
 /*
  *  Push a data in to stack of specific adjacent node
  *  Return value:
@@ -75,15 +76,15 @@ int push_data(const struct data, struct node *);
 struct data pop_data(struct node *);
 
 /*
- *  Delete a shared memory page
+ *  Delete a shared memory page and its contant
  *  Return value:
  *      On success return 0
  *      On error print all erron and return -1
  */
 int del_shmpg(struct shmpg *);
 
-/* Del_shmpg just for clr*/
-int clr_del_shmpg(key_t);
+/* Only delete shared memory */
+int clr_shmpg(key_t);
 
 /* 
    TODO
