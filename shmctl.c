@@ -128,6 +128,7 @@ struct data pop_data(struct node* target)
 
     rw_rd (&(target->lock));
     ret = target->data;
+    target->data.rate = 0;
     rw_rd_end (&(target->lock));
 
     return ret;
