@@ -35,12 +35,18 @@ static PyMethodDef traf_node_methods[] = {
 static PyObject *_send_d(PyObject *self, PyObject *args)
 {
     int n;
-    struct data d;
     int ret;
-    if (!PyArg_ParseTuple (args, "ii", &n, &(d.rate)))
+    int len;
+    struct contant d;
+
+    if (!PyArg_ParseTuple (args, "is#", &n, &(d.json), len))
         return Py_BuildValue ("i", -1);
 
-    d.next = NULL;
+    if (len > 200) {
+        fprintf (stderr, "Input length too long");
+        eixt (-1);
+    }
+
     ret = send_d (n, d);
 
     return Py_BuildValue ("i", ret);
@@ -49,13 +55,13 @@ static PyObject *_send_d(PyObject *self, PyObject *args)
 static PyObject *_recv_d(PyObject *self, PyObject *args)
 {
     int n;
-    struct data d;
+    struct contant d;
     if (!PyArg_ParseTuple (args, "i", &n))
         return Py_BuildValue ("i", -1);
 
     d = recv_d (n);
 
-    return Py_BuildValue ("i", d.rate);
+    return Py_BuildValue ("s", d.json);
 }
 
 static PyObject *_start_server(PyObject *self)

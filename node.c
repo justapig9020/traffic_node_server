@@ -13,7 +13,7 @@ static struct shmpg *shm = NULL;
 static int cltFd = -1;
 static struct sockaddr_in serInfo;
 
-int send_d(int n, const struct data d)
+int send_d(int n, const struct contant d)
 {
     if (shm == NULL) {
         fprintf (stderr, "Server doesnt active\n");
@@ -35,17 +35,16 @@ int send_d(int n, const struct data d)
     } else {
         serInfo.sin_addr.s_addr = shm->adj[n].ip;
     }
-    sendto (cltFd, &d, sizeof(struct data), 0, (struct sockaddr *)&serInfo, sizeof(struct sockaddr));
+    sendto (cltFd, &d, sizeof(struct contant), 0, (struct sockaddr *)&serInfo, sizeof(struct sockaddr));
     return 0;
 }
 
-struct data recv_d(int n)
+struct contant recv_d(int n)
 {
-    struct data d;
+    struct contant d;
     if (shm == NULL) {
         fprintf (stderr, "Server doesnt active\n");
-        d.rate = -1;
-        d.next = NULL;
+        bzero (&d, sizeof(struct contant));
         return d;
     }
     d = pop_data (&(shm->adj[n]));
@@ -68,15 +67,14 @@ int stop_server()
 {
     pid_t id;
     int s;
-    struct data d;
+    struct contant d;
 
     dbg ("stoping server");
     if (shm == NULL) {
         fprintf (stderr, "Server doesnt active\n");
         return -1;
     }
-    d.rate = -1;
-    d.next = NULL;
+    bzero (&d,sizeof(struct contant));
     if (send_d (-1, d) == -1) {
         fprintf (stderr, "@ stop server\n");
         return -1;

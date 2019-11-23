@@ -12,7 +12,7 @@
 #include "debug.h"
 
 static int init_server();
-static int server_op(const struct data);
+static int server_op(const struct contant);
 static void server_active(int, struct shmpg *);
 static int clr_server();
 
@@ -41,7 +41,7 @@ int init_server()
     return sockFd;
 }
 
-int server_op(const struct data d)
+int server_op(const struct contant d)
 {
     return 0;
 }
@@ -50,7 +50,7 @@ void server_active(int sd, struct shmpg *shm)
 {
     dbg ("server active");
     struct sockaddr_in clt_addr;
-    struct data d;
+    struct contant d;
     socklen_t clt_len;
     
 
@@ -59,8 +59,8 @@ void server_active(int sd, struct shmpg *shm)
     while (1) {
         int i;
 
-        bzero (&d, sizeof(struct data));
-        recvfrom (sd, &d, sizeof(struct data), 0, (struct sockaddr *)&clt_addr, &clt_len);
+        bzero (&d, sizeof(struct contant));
+        recvfrom (sd, &d, sizeof(struct contant), 0, (struct sockaddr *)&clt_addr, &clt_len);
         
         dbg_arg ("ip_in: %d\n", clt_addr.sin_addr.s_addr);
         dbg_arg ("ANY: %d\n", htonl (INADDR_ANY));
@@ -87,12 +87,11 @@ void server_active(int sd, struct shmpg *shm)
 
 int clr_server()
 {
-    struct data d;
+    struct contant d;
     int cltFd;
     struct sockaddr_in serInfo;
 
-    d.rate = -1;
-    d.next = NULL;
+    bzero (&d, sizeof(struct contant));
 
     cltFd = socket (AF_INET, SOCK_DGRAM, 0);
     if (cltFd == -1) {

@@ -15,8 +15,12 @@ struct bin {
     struct bin *next;
 };
 
+struct contant {
+    char json[200];
+};
+
 struct data {
-    int rate;
+    struct contant contant;
     struct data *next;
 };
 
@@ -66,14 +70,14 @@ int clr_shmg_cont();
  *  Return value:
  *      return 0;
  */ 
-int push_data(const struct data, struct node *);
+int push_data(const struct contant, struct node *);
 
 /*
  *  Pop a data from the stack of specific adjacentnode
  *  Return value:
  *      data
  */ 
-struct data pop_data(struct node *);
+struct contant pop_data(struct node *);
 
 /*
  *  Delete a shared memory page and its contant

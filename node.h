@@ -3,8 +3,8 @@
 
 #include "shmctl.h"
 
-int send_d(int, const struct data);
-struct data recv_d(int);
+int send_d(int, const struct contant);
+struct contant recv_d(int);
 int start_server();
 int stop_server();
 

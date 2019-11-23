@@ -11,7 +11,6 @@ typedef uint64_t addrop_t;
 
 static void *creat_shm(key_t);
 static void *get_shm(key_t);
-int clr_shmpg(key_t);
 
 void *creat_shm (key_t key)
 {
@@ -86,7 +85,7 @@ struct shmpg *creat_shmpg(key_t key, int num)
     for (int i=0; i<num; i++) {
         init_rwlock (&(shm->adj[i].lock), RL_KEY_BS+i, WL_KEY_BS+i, PW_KEY_BS+i);
         //shm->adj[i].data = NULL; // if shtmalloc practiced
-        shm->adj[i].data.rate = 0;
+        bzero (&(shm->adj[i].data.contant), sizeof(struct contant));
         shm->adj[i].data.next = NULL; 
     }
 
@@ -141,21 +140,24 @@ int clr_shmg_cont()
     return ret;
 }
 
-int push_data(const struct data d, struct node *target)
+int push_data(const struct contant c, struct node *target)
 {
+    struct data d;
+    d.next = NULL;
+    d.contant = c;
     rw_wrt (&(target->lock));
     target->data = d; // Need to modify after practiced shtmalloc
     rw_wrt_end (&(target->lock));
     return 0;
 }
 
-struct data pop_data(struct node* target)
+struct contant pop_data(struct node* target)
 {   
-    struct data ret;
+    struct contant ret;
 
     rw_rd (&(target->lock));
-    ret = target->data;
-    target->data.rate = 0;
+    ret = target->data.contant;
+    bzero (&(target->data.contant), sizeof(struct contant));
     rw_rd_end (&(target->lock));
 
     return ret;
