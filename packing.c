@@ -1,7 +1,9 @@
 #include <Python.h>
 
+#include <stdlib.h>
 #include "shmctl.h"
 #include "node.h"
+#include "debug.h"
 
 PyMODINIT_FUNC PyInit_node ();
 static struct PyModuleDef traf_node_module;
@@ -38,15 +40,20 @@ static PyObject *_send_d(PyObject *self, PyObject *args)
     int ret;
     int len;
     struct contant d;
+    char *s;
 
-    if (!PyArg_ParseTuple (args, "is#", &n, &(d.json), len))
+    if (!PyArg_ParseTuple (args, "is#", &n, &(s), &len))
         return Py_BuildValue ("i", -1);
+
+    dbg_arg ("len: %d\nmsg: %s\n", len, s);
 
     if (len > 200) {
         fprintf (stderr, "Input length too long");
-        eixt (-1);
+        return Py_BuildValue ("i", -1);
     }
 
+    strncpy (d.json, s, len);
+    d.json[len] = '\0';
     ret = send_d (n, d);
 
     return Py_BuildValue ("i", ret);

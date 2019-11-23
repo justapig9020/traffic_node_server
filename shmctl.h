@@ -64,7 +64,7 @@ struct shmpg *creat_shmpg(key_t, int num);
  */
 struct shmpg *get_shmpg(key_t);
 
-int clr_shmg_cont();
+int clr_shmg_cont(void);
 /*
  *  Push a data in to stack of specific adjacent node
  *  Return value:

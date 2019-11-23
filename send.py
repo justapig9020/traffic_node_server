@@ -4,9 +4,10 @@ from time import *
 def run ():
     start_server()
     while True:
-        a = int (input())
+        a = input()
+        print ("py msg: " + a)
         send_d (0, a)
-        if a == -1:
+        if a == "exit":
             break
         
     id = stop_server()

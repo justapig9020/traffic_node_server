@@ -6,9 +6,9 @@ def run ():
     while True:
         sleep (1)
         a = recv_d (0)
-        if a == -1:
-            break
         print (a)
+        if a == "exit":
+            break
     ret = stop_server ()
     print (ret)
 
