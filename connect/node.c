@@ -51,6 +51,11 @@ struct contant recv_d(int n)
     return d;
 }
 
+int set_t (char *json)
+{
+    
+}
+
 int start_server()
 {
     dbg ("starting server");

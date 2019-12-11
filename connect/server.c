@@ -117,6 +117,7 @@ struct shmpg *exec_server()
     FILE *fd;
     int n;
     int sd;
+    char c[16];
     pid_t id;
 
     fd = fopen ("./adj_table", "r");
@@ -125,7 +126,7 @@ struct shmpg *exec_server()
         return (struct shmpg *)-1;
     }
     
-    fscanf (fd, "%d", &n);
+    fscanf (fd, "%d", &n); // get adj nodes number
     printf ("Adj node number: %d\n", n);
     while (1) {
         puts ("Create shmpg");
@@ -140,13 +141,20 @@ struct shmpg *exec_server()
         }
     }
 
+    // read adj nodes ip
     for (int i=0; i<n; i++) {
-        char c[16];
+        bzero (c, sizeof(c));
         printf ("node %d ", i);
         fscanf (fd, "%s", c);
         printf ("ip: %s\n", c);
         shm->adj[i].ip = inet_addr (c);
     }
+
+#if MONITOR
+    bzero (c, sizeof(c));
+    fscanf (fd, "%s", c);
+    shm->mip = inet_addr (c);
+#endif
 
     fclose (fd);
     fd = NULL;

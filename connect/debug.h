@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #define DEBUG 0
+#define MONITOR 1
 
 #if DEBUG
     #define dbg_arg(x,...) printf(x, __VA_ARGS__)

@@ -1,4 +1,6 @@
 *
+!method/
+!connect/
 !*.c
 !*.h
 !*.py
