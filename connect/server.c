@@ -146,8 +146,13 @@ struct shmpg *exec_server()
         bzero (c, sizeof(c));
         printf ("node %d ", i);
         fscanf (fd, "%s", c);
-        printf ("ip: %s\n", c);
-        shm->adj[i].ip = inet_addr (c);
+        if (strncmp (c, "NULL", 16)) {
+            puts ("NULL");
+            shm->adj[i].ip = -1;
+        } else {
+            printf ("ip: %s\n", c);
+            shm->adj[i].ip = inet_addr (c);
+        }
     }
 
 #if MONITOR

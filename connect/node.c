@@ -34,6 +34,10 @@ int send_d(int n, const struct contant d)
         serInfo.sin_addr.s_addr = htonl(INADDR_ANY);
     } else {
         serInfo.sin_addr.s_addr = shm->adj[n].ip;
+        if (serInfo.sin_addr.s_addr == -1) {
+            dbg ("Sending message to Null node");
+            return -1;
+        }
     }
     sendto (cltFd, &d, sizeof(struct contant), 0, (struct sockaddr *)&serInfo, sizeof(struct sockaddr));
     return 0;
