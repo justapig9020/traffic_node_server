@@ -60,8 +60,7 @@ void server_active(int sd, struct shmpg *shm)
         int i;
 
         bzero (&d, sizeof(struct contant));
-        recvfrom (sd, &d, sizeof(struct contant), 0, (struct sockaddr *)&clt_addr, &clt_len);
-        
+        recvfrom (sd, &d, sizeof(struct contant), 0, (struct sockaddr *)&clt_addr, &clt_len); 
         dbg_arg ("ip_in: %d\n", clt_addr.sin_addr.s_addr);
         dbg_arg ("ANY: %d\n", htonl (INADDR_ANY));
         if (clt_addr.sin_addr.s_addr == 16777343) { // Server contral operation
