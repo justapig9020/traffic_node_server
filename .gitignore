@@ -2,6 +2,7 @@
 !method/
 !connect/
 !simulator/
+!conf/
 !*.c
 !*.h
 !*.py
