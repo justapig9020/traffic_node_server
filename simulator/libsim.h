@@ -11,6 +11,7 @@ struct simu
 {
     int ndNum;
     struct *node nd;
+    int (*cr_gnr)(struct simu *);
 };
 
 struct node
@@ -49,6 +50,6 @@ struct car
 struct simu *init_simu();
 int free_simu(struct simu *);
 int update(struct simu *);
-int add_sig(int n, int (*fptr)(struct node *));
+int add_sig(struct simu *,int ,int , int (*fptr)(struct node *));
 
 #endif

@@ -59,6 +59,21 @@ static int init_edge(FILE *fd, FILE *fd1, struct node *nptr)
     return 0;
 }
 
+static int eg_update (struct simu *sm, struct node *nptr)
+{
+    for (int i=0; i<nptr->egNum; i++) {
+        struct edge *eptr;
+
+        eptr = &(nptr->eg[i]);
+
+        if (eptr->pr > 0) { // 
+
+        } else if (eptr->pr.cp == -1) { // exit 
+                // car generate
+        }
+    }
+
+}
 
 struct simu *init_simu()
 {
@@ -122,10 +137,38 @@ struct simu *init_simu()
 
 int free_simu(struct simu* sm)
 {
+    for (int i=0; i<sm->ndNum; i++) {
+        struct node *nptr = &(sm->nd[i]);
 
+        free (nptr->eg);
+        nptr->eg = NULL;
+        free (nptr_>adj);
+        nptr->adj = NULL;
+        free (nptr->update);
+        nptr->update = NULL;
+        
+    }
+    free (sm->nd);
+    sm->nd = NULL;
+    free(sm);
+    sm = NULL;
+    return 0;
 }
 
-int update()
+int update(struct simu *sm)
 {
+    for (int i=0; i<sm->ndNum; i++) {
+        struct node *nptr;
 
+        eg_update (sm, nptr);
+        nptr = &(sm->nd[i]);
+        nptr->update[nptr->sig] (nptr);
+    }
+    return 0;
+}
+
+int add_sig(struct simu *sm, int n, int s, int (*fptr)(struct node *))
+{
+    sm->nd[n].update[s] = fptr;
+    return 0;
 }
