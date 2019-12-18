@@ -10,7 +10,7 @@
 
 
 // find node number via ip
-static int find_nd_num(struct simu *s, int ip)
+static int find_nd_num(struct simu *sm, int ip)
 {
     for (int i=0; i<sm->ndNum; i++) {
         if (ip == sm->nd[i].ip)
@@ -19,32 +19,33 @@ static int find_nd_num(struct simu *s, int ip)
     return -1;
 }
 
-static int init_edge(FILE *fd, FILE *fd1, struct node *nptr)
+static int init_edge(struct simu *sm, FILE *fd, FILE *fd1, struct node *nptr)
 {
     struct edge *eptr;
     char *s;
 
-    eptr = &(nptr->eg[o]);
     s = malloc (16);
     
     for (int i=0; i<nptr->egNum; i++) {
+        eptr = &(nptr->eg[i]);
+
         bzero (s, 16);
         fscanf (fd, "%s", s); // get adj_ip
 
         if (!strcmp (s, "NULL")) { // not NULL set to to the node
             int buf = inet_addr (s);
-            int nbuf = find_nd_num (buf);
+            int nbuf = find_nd_num (sm, buf);
             if (nbuf == -1) {     // node not fount
-                dbg_arg ("adj_ip not found @ node %d edge %d\n", i, o);
+                dbg_arg ("adj_ip not found, edge %d\n", i);
                 eptr->from = NULL;
-                nptr[o]->adj = -1;
+                nptr->adj[i]= -1;
             } else {
                 eptr->from = &(sm->nd[nbuf]);
-                nptr[o]->adj = nbuf;
+                nptr->adj[i] = nbuf;
             }
         } else {                  // NULL set NULL to to
-            eptr->to = NULL; 
-            nptr[o]->adj = -1;
+            eptr->from = NULL; 
+            nptr->adj[i] = -1;
         }
 
         // set edge parameter
@@ -66,16 +67,28 @@ static int eg_update (struct simu *sm, struct node *nptr)
 
         eptr = &(nptr->eg[i]);
 
-        if (eptr->pr > 0) { // 
+        if (eptr->pr.cp > 0) { // edge exist
+            struct car *cptr;
+
+            cptr = eptr->cr;
+            while (cptr) {
+                if (cptr->onTm > 0)
+                    cptr->onTm--;
+                cptr = cptr->next;
+            }
 
         } else if (eptr->pr.cp == -1) { // exit 
-                // car generate
+            int opE;
+            opE = (i+1)&1 + (i>>1)<<1;    // opposite edge
+            sm->cr_gnr(&(nptr->eg[opE])); // generate car to opposite
+        } else {
+            // dbg ("edge not exist");
         }
     }
 
 }
 
-struct simu *init_simu()
+struct simu *init_simu(int (*f)(struct edge *))
 {
     struct simu *sm;
     FILE *fd;
@@ -86,15 +99,16 @@ struct simu *init_simu()
     sm = malloc (sizeof(struct simu));
     fn = malloc (20);
     s = malloc (16);
+    sm->cr_gnr = f; // set car generation function
 
     sprintf (fn, "%s%s",CONF_DIR, IP_TBL); // ip_table
     fd = fopen (fn, "r");
 
     fscanf (fd, "%d", &(sm->ndNum));         // get node amount
-    sm->nd = malloc (sizeof(struct node) * sm->num);
+    sm->nd = malloc (sizeof(struct node) * sm->ndNum);
 
     // set each node's ip
-    for (int i=0; i<sm->num; i++) {
+    for (int i=0; i<sm->ndNum; i++) {
         bzero (s, 16);
         fscanf (fd, "%s", s);
         sm->nd[i].ip = inet_addr (s);
@@ -104,7 +118,7 @@ struct simu *init_simu()
     fd = NULL;
 
     // read each node's adj_table and sim_table
-    for (int i=0; i<sm->num; i++) {
+    for (int i=0; i<sm->ndNum; i++) {
         int n;
         struct node *nptr;
 
@@ -130,7 +144,7 @@ struct simu *init_simu()
         nptr->update = malloc (sizeof(int(*)()) * n); // set update function number
     
         // init edge_para
-        init_edge (fd, fd1, nptr);
+        init_edge (sm, fd, fd1, nptr);
     }
     return sm;
 }
@@ -142,7 +156,7 @@ int free_simu(struct simu* sm)
 
         free (nptr->eg);
         nptr->eg = NULL;
-        free (nptr_>adj);
+        free (nptr->adj);
         nptr->adj = NULL;
         free (nptr->update);
         nptr->update = NULL;
@@ -167,8 +181,16 @@ int update(struct simu *sm)
     return 0;
 }
 
+
 int add_sig(struct simu *sm, int n, int s, int (*fptr)(struct node *))
 {
     sm->nd[n].update[s] = fptr;
     return 0;
+}
+
+int add_all_sig(struct simu *sm, int s, int(*fptr)(struct node *))
+{
+    for (int i=0; i<sm->ndNum; i++) {
+        add_sig (sm, i, s, fptr);
+    }
 }
