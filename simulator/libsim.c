@@ -9,6 +9,10 @@
 #include "conf.h"
 
 
+int get_oppo(int n) {
+    return (n + 1)&1 + (n & ~1);
+}
+
 // find node number via ip
 static int find_nd_num(struct simu *sm, int ip)
 {
@@ -22,9 +26,10 @@ static int find_nd_num(struct simu *sm, int ip)
 static int init_edge(struct simu *sm, FILE *fd, FILE *fd1, struct node *nptr)
 {
     struct edge *eptr;
-    char *s;
+    char s[16]; // set ip string 
+    int ret;    // node type: N_CROS(cross) or N_EXIT(exit)
 
-    s = malloc (16);
+    ret = N_CROS;
     
     for (int i=0; i<nptr->egNum; i++) {
         eptr = &(nptr->eg[i]);
@@ -50,6 +55,9 @@ static int init_edge(struct simu *sm, FILE *fd, FILE *fd1, struct node *nptr)
 
         // set edge parameter
         fscanf (fd1, "%d", &(eptr->pr.cp));
+        if (eptr->pr.cp == -1) { // this node has exit
+            ret = N_EXIT;
+        }
         fscanf (fd1, "%d", &(eptr->pr.p));
         fscanf (fd1, "%d", &(eptr->pr.tw));
 
@@ -57,7 +65,7 @@ static int init_edge(struct simu *sm, FILE *fd, FILE *fd1, struct node *nptr)
         eptr->cont = 0;
         eptr->cr = NULL;
     }
-    return 0;
+    return ret;
 }
 
 static int eg_update (struct simu *sm, struct node *nptr)
@@ -79,7 +87,7 @@ static int eg_update (struct simu *sm, struct node *nptr)
 
         } else if (eptr->pr.cp == -1) { // exit 
             int opE;
-            opE = (i+1)&1 + (i>>1)<<1;    // opposite edge
+            opE = get_oppo (i);    // opposite edge
             sm->cr_gnr(&(nptr->eg[opE])); // generate car to opposite
         } else {
             // dbg ("edge not exist");
@@ -88,18 +96,15 @@ static int eg_update (struct simu *sm, struct node *nptr)
 
 }
 
-struct simu *init_simu(int (*f)(struct edge *))
+struct simu *init_simu()
 {
     struct simu *sm;
     FILE *fd;
     FILE *fd1;
-    char *fn;
-    char *s;
+    char fn[20]; // file name
+    char s[16];  // ip string 
 
     sm = malloc (sizeof(struct simu));
-    fn = malloc (20);
-    s = malloc (16);
-    sm->cr_gnr = f; // set car generation function
 
     sprintf (fn, "%s%s",CONF_DIR, IP_TBL); // ip_table
     fd = fopen (fn, "r");
@@ -111,7 +116,8 @@ struct simu *init_simu(int (*f)(struct edge *))
     for (int i=0; i<sm->ndNum; i++) {
         bzero (s, 16);
         fscanf (fd, "%s", s);
-        sm->nd[i].ip = inet_addr (s);
+        sm->nd[i].ip = inet_addr (s); // set ip as int
+        sm->nd[i].num = i;            // set node number
     }
 
     fclose (fd);
@@ -141,12 +147,19 @@ struct simu *init_simu(int (*f)(struct edge *))
         fscanf (fd1, "%d", &n); // get adj amount
         fscanf (fd1, "%d", &n); // get phase amount
         nptr->fs = n;
-        nptr->update = malloc (sizeof(int(*)()) * n); // set update function number
+        nptr->update = malloc (sizeof(int(*)(struct node *)) * n); // set update function number
     
         // init edge_para
         init_edge (sm, fd, fd1, nptr);
     }
     return sm;
+}
+
+int set_cr_gnr(struct simu *sm, struct car *(*f)(struct simu *, struct node *, int))
+{
+    // set car genetation funciotn
+    sm->cr_gnr = f;
+    return 0;
 }
 
 int free_simu(struct simu* sm)
@@ -192,5 +205,29 @@ int add_all_sig(struct simu *sm, int s, int(*fptr)(struct node *))
 {
     for (int i=0; i<sm->ndNum; i++) {
         add_sig (sm, i, s, fptr);
+    }
+}
+
+
+void show_eg(struct edge *eg)
+{
+    printf ("Capacity: %d\nP: %d\n Tw: %d\n", eg.pr.cp, eg.pr.p. eg.pr.tw);
+}
+
+void show_nd(struct node *nd)
+{
+    printf ("Edges: %d\nPhase: %d\n", nd->egNum, nd->fs);
+    for (int i=0; i<egNum; i++) {
+        printf ("  = Edge %d =\n", i);
+        show_eg (&(nd->eg[i]));
+    }
+}
+
+void show_sm(struct simu *sm)
+{
+    printf ("==== Show simulater ====\nNodes: %d\n", sm->ndNum);
+    for (int i=0; i<sm->ndNum; i++) {
+        printf ("\n === Node %d ===\n", i);
+        show_nd (&(sm->nd[i]));
     }
 }

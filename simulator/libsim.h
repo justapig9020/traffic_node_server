@@ -1,22 +1,31 @@
 #ifndef _LIBSIM_H_
 #define _LIBSIM_H_
 
+enum{
+    N_EXIT,
+    N_CROS
+};
+
 struct simu;
 struct node;
 struct edge;
 struct egpr;
+struct path;
 struct car;
+struct ndbuf;
 
 struct simu
 {
     int ndNum;
     struct node *nd;
-    int (*cr_gnr)(struct edge *);
+    struct car *(*cr_gnr)(struct simu *, struct node *, int);
 };
 
 struct node
 {
+    int num;
     int egNum;
+    int type;
     struct edge *eg;
     int *adj;
     int ip;
@@ -40,18 +49,37 @@ struct edge
     struct car *cr;     // cats on this edge
 };
 
+struct path
+{
+    int n;
+    struct path *next;
+};
 
 struct car
 {
     int onTm;
-    int *path;
+    struct path *path;
     struct car *next;
 };
 
-struct simu *init_simu(int (*)(struct edge *));
+struct ndbuf
+{
+    struct node *nd;
+    struct ndbuf *next;
+};
+
+//struct simu sm;
+
+struct simu *init_simu();
+int set_cr_gnr(struct simu *, struct car *(*)(struct simu *, struct node *, int))
 int free_simu(struct simu *);
 int update(struct simu *);
 int add_sig(struct simu *,int ,int , int (*fptr)(struct node *));
 int add_all_sig(struct simu *,int , int (*fptr)(struct node *));
+
+void show_eg(struct edge *);
+void show_nd(struct node *);
+void show_sm(struct simu *);
+
 
 #endif
