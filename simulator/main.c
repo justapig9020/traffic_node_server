@@ -5,6 +5,16 @@
 #include "method.h"
 
 
+void show(struct simu *sm)
+{
+    printf ("\n=======\n");
+    show_eg (&(sm->nd[0].eg[0]));
+    puts ("");
+    show_nd (&(sm->nd[2]));
+    puts ("");
+    show_eg (&(sm->nd[4].eg[1]));
+}
+
 int main(void)
 {
     struct simu *sm;
@@ -18,9 +28,10 @@ int main(void)
 
     show_sm_conf (sm);
     
+    system ("clear");
     while ((c = getchar()) != 'E') {
         update (sm);
-        show_sm(sm);
+        show (sm);
     }
     
     free_simu (sm);

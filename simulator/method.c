@@ -6,13 +6,80 @@
 #include "method.h"
 #include "debug.h"
 
+
+struct car *enter(struct car *cr, struct edge *eg)
+{
+    struct car *cBuf;
+
+    cBuf = NULL; // if enter sucess return ptr to next car
+
+    if (eg->pr.cp == -1) {
+        cBuf = cr->next;
+
+        free (cr->path); // car exit simu sys
+        free (cr);
+    } else if (eg->cont < eg->pr.cp) {
+        struct car **cptr;
+        struct path *pbuf;
+
+        cptr = &(eg->cr);
+        while (*cptr) {     // find tail of queue
+            cptr = &((*cptr)->next);
+        }
+
+        *cptr = cr;
+        cr->onTm = eg->pr.tw;
+
+        pbuf = cr->path; // get next path
+        cr->path = cr->path->next;
+        free (pbuf);    // free last path
+        pbuf = NULL;
+
+        cBuf = cr->next; // set return val
+        cr->next = NULL;
+
+        cptr = NULL;
+    }
+    return cBuf;
+}
+
+int leave(struct car *cr, struct edge *eg)
+{
+    eg->cr = cr;
+    eg->cont--;
+    return 0;
+}
+
+int strt(struct node *nd, int d)
+{
+    int toD;
+    int i;
+    struct car *cBuf;
+
+    i=0;
+    if (nd->eg[d].cr && nd->eg[d].cr->onTm==0 && i<nd->eg[d].pr.p) {
+        if (cBuf = enter (nd->eg[d].cr, &(nd->eg[nd->eg[d].cr->path->n].from->eg[get_oppo(d)])))
+            leave (cBuf, &(nd->eg[d]));
+    }
+}
+
 int fs0(struct node *nd)
 {
+    for (int i=0; i<2; i++) {
+        if (nd->eg[i].pr.cp == 0)
+            continue;
+        strt (nd, i);
+    }
     return 0;
 }
 
 int fs1(struct node *nd)
 {
+    for (int i=2; i<3; i++) {
+        if (nd->eg[i].pr.cp == 0)
+            continue;
+        strt (nd, i);
+    }
     return 0;
 }
 

@@ -69,7 +69,7 @@ static int init_edge(struct simu *sm, FILE *fd, FILE *fd1, struct node *nptr)
     return 0;
 }
 
-static int eg_update (struct simu *sm, struct node *nptr)
+static int eg_update(struct simu *sm, struct node *nptr)
 {
     for (int i=0; i<nptr->egNum; i++) {
         struct edge *eptr;
@@ -88,7 +88,9 @@ static int eg_update (struct simu *sm, struct node *nptr)
 
         } else if (eptr->pr.cp == -1) { // exit 
             dbg_arg ("edge %d generating car\n", i);
-            nptr->eg[i].cr = sm->cr_gnr(sm, nptr, i); // generate car to opposite
+            if (nptr->eg[i].cr = sm->cr_gnr(sm, nptr, i)) { // generate car to opposite
+                nptr->eg[i].cont = nptr->eg[i].pr.p;
+            }
             dbg_arg ("%p\n", nptr->eg[i].cr);
         } else {
             // dbg ("edge not exist");
