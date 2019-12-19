@@ -10,7 +10,7 @@
 
 
 int get_oppo(int n) {
-    return (n + 1)&1 + (n & ~1);
+    return ((n + 1)&1) + (n & ~1);
 }
 
 // find node number via ip
@@ -196,8 +196,12 @@ int update(struct simu *sm)
         dbg_arg ("updating node %d\n", i);
         nptr = &(sm->nd[i]);
         eg_update (sm, nptr);
+        //puts ("");
         //show_nd (nptr);
         nptr->update[nptr->sig] (nptr);
+        //puts ("");
+        //show_nd (nptr);
+        //getchar ();
     }
     return 0;
 }
@@ -244,18 +248,21 @@ void show_sm_conf(struct simu *sm)
 
 void show_path(struct path **pt)
 {
-    printf ("path: ");
-    while (*pt) {
+    if (*pt) {
         printf ("%d ", (*pt)->n);
         pt = &((*pt)->next);
+    } else {
+        printf ("E ");
     }
-    puts ("");
 }
 
 void show_car(struct car *cr)
 {
+    int i;
+    i=0;
     while (cr) {
-        printf ("Left: %d ", cr->onTm);
+        for (;i<cr->onTm; i++)
+            printf ("* ");
         show_path (&(cr->path));
         cr = cr->next;
     }
@@ -263,17 +270,19 @@ void show_car(struct car *cr)
 
 void show_eg(struct edge *eg)
 {
-    printf ("contant: %d\ncar list:\n", eg->cont);
+    printf ("c: %d |  ", eg->cont);
     show_car (eg->cr);
+    //printf ("")
 }
 
 void show_nd(struct node *nd)
 {
+    printf ("\n === Node %d ===", nd->num);
     printf ("Signal: %d\n", nd->sig);
     for (int i=0; i<nd->egNum; i++) {
         if (nd->eg[i].pr.cp == 0)
             continue;
-        printf (" = Edge %d = \n", i);
+        printf ("\n = Edge %d = \n", i);
         show_eg (&(nd->eg[i]));
     }
 }
@@ -283,7 +292,6 @@ void show_sm(struct simu *sm)
 {
     printf ("==== Show simulater ====\n");
     for (int i=0; i<sm->ndNum; i++) {
-        printf ("\n === Node %d ===\n", i);
         show_nd (&(sm->nd[i]));
     }
 }

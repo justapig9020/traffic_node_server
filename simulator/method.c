@@ -7,21 +7,21 @@
 #include "debug.h"
 
 
-struct car *enter(struct car *cr, struct edge *eg)
+int enter(struct car *cr, struct edge *eg, struct car **cBuf)
 {
-    struct car *cBuf;
+    int ret;
 
-    cBuf = NULL; // if enter sucess return ptr to next car
-
-    if (eg->pr.cp == -1) {
-        cBuf = cr->next;
-
-        free (cr->path); // car exit simu sys
+    puts ("leaving");
+    ret = 0;
+    if (!eg) {
+        ret = 1;
+        *cBuf = cr->next;
         free (cr);
     } else if (eg->cont < eg->pr.cp) {
         struct car **cptr;
         struct path *pbuf;
 
+        ret = 1;
         cptr = &(eg->cr);
         while (*cptr) {     // find tail of queue
             cptr = &((*cptr)->next);
@@ -35,16 +35,23 @@ struct car *enter(struct car *cr, struct edge *eg)
         free (pbuf);    // free last path
         pbuf = NULL;
 
-        cBuf = cr->next; // set return val
+        *cBuf = cr->next; // set return val
         cr->next = NULL;
 
         cptr = NULL;
+        eg->cont++;
+    } else {
+        if (eg)
+            printf ("%d %d\n", eg->cont, eg->pr.cp);
+        else 
+            puts ("no path");
     }
-    return cBuf;
+    return ret;
 }
 
 int leave(struct car *cr, struct edge *eg)
 {
+    printf ("leaved\n");
     eg->cr = cr;
     eg->cont--;
     return 0;
@@ -52,21 +59,46 @@ int leave(struct car *cr, struct edge *eg)
 
 int strt(struct node *nd, int d)
 {
-    int toD;
-    int i;
+    int toD;    // direction
+    int fromD;
+    int i;     // lunch car counter 
     struct car *cBuf;
+    struct edge *to;
 
-    i=0;
-    if (nd->eg[d].cr && nd->eg[d].cr->onTm==0 && i<nd->eg[d].pr.p) {
-        if (cBuf = enter (nd->eg[d].cr, &(nd->eg[nd->eg[d].cr->path->n].from->eg[get_oppo(d)])))
+    i=0; 
+    while (nd->eg[d].cr && // car exist
+        nd->eg[d].cr->onTm==0 && // car arrived node
+        i<nd->eg[d].pr.p) { //  p car per turn
+
+        to = NULL;
+        if (nd->eg[d].cr->path) {
+            toD = nd->eg[d].cr->path->n;
+            fromD = get_oppo (toD);
+            printf ("%d %d\n", toD, fromD);
+            to = &(nd->eg[toD].from->eg[fromD]);
+            printf ("from %d, to %d\n", nd->num, nd->eg[toD].from->num);
+        } else {
+            puts ("exit");
+        }
+    
+
+        if (enter (nd->eg[d].cr, to, &cBuf)) {
             leave (cBuf, &(nd->eg[d]));
+        } else {
+            printf ("leave failed\n");
+            return i;
+        }
+        
+        i++;
     }
+    return i;
 }
 
 int fs0(struct node *nd)
 {
-    for (int i=0; i<2; i++) {
-        if (nd->eg[i].pr.cp == 0)
+    printf ("node %d fs %d\n", nd->num, nd->sig);
+    for (int i=0; i<2; i++) { // phase 0: edge 0, 1
+        if (nd->eg[i].pr.cp == 0) // no edge
             continue;
         strt (nd, i);
     }
@@ -75,8 +107,9 @@ int fs0(struct node *nd)
 
 int fs1(struct node *nd)
 {
-    for (int i=2; i<3; i++) {
-        if (nd->eg[i].pr.cp == 0)
+    printf ("node %d fs %d\n", nd->num, nd->sig);
+    for (int i=2; i<4; i++) { // phase 1: edge 2, 3
+        if (nd->eg[i].pr.cp == 0) // no edge
             continue;
         strt (nd, i);
     }
@@ -126,7 +159,7 @@ struct car *rand_gene(struct simu *sm, struct node *nd, int n)
             nptr = nptr->eg[d].from;
             n = get_oppo (n);
             //show_nd_conf (nptr);
-        } while (nptr->type != N_EXIT);
+        } while (nptr->type != N_EXIT); // find path until eixt
         cTail = &((*cTail)->next);
         nptr = NULL;
     }
