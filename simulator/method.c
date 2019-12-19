@@ -124,7 +124,6 @@ struct car *rand_gene(struct simu *sm, struct node *nd, int n)
     struct car *c;
     struct car **cTail;
     struct path **pTail;
-    int test = 0;
     int idir;           // in direction
 
     if (nd->sig != n/2) // exit direction not green light

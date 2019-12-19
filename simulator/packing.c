@@ -1,90 +1,124 @@
 #include <Python.h>
 
-#include <stdlib.h>
-#include "shmctl.h"
-#include "node.h"
-#include "debug.h"
+#include <stdio.h>
 
-PyMODINIT_FUNC PyInit_node ();
-static struct PyModuleDef traf_node_module;
-static PyMethodDef traf_node_methods[];
-static PyObject *_send_d(PyObject *, PyObject *);
-static PyObject *_recv_d(PyObject *, PyObject *);
-static PyObject *_start_server(PyObject *);
-static PyObject *_stop_server(PyObject *);
+#include "sim.h"
 
-PyMODINIT_FUNC PyInit_traf_node() 
+PyMODINIT_FUNC PyInit_simu();
+static struct PyModuleDef simu_module;
+static PyMethodDef simu_methods[];
+
+static PyObject *_sim_start(PyObject *self);
+static PyObject *_sim_stop(PyObject *self);
+static PyObject *_sim_update(PyObject *self);
+static PyObject *_chg_sig(PyObject *self, PyObject *args);
+static PyObject *_get_sig(PyObject *self, PyObject *args);
+static PyObject *_get_cont(PyObject *self, PyObject *args);
+static PyObject *_show_sm(PyObject *self);
+/*
+int sim_start(void);
+int stop_sim(void);
+int sim_update(void);
+int chg_sig(int ,int);
+int get_sig(int);
+int get_cont(int, int);
+*/
+
+PyMODINIT_FUNC PyInit_simu() 
 {
-    return PyModule_Create (&traf_node_module);
+    return PyModule_Create (&simu_module);
 }
 
-static struct PyModuleDef traf_node_module = {
+static struct PyModuleDef simu_module = {
     PyModuleDef_HEAD_INIT, 
-    "traf_node",
-    "c library for claculation",
+    "simu",
+    "traffic simultor",
     -1,
-    traf_node_methods
+    simu_methods
 };
 
-static PyMethodDef traf_node_methods[] = {
-    {"send_d", (PyCFunction) _send_d, METH_VARARGS, "Send a data to specific adjacent node by node index"},
-    {"recv_d", (PyCFunction) _recv_d, METH_VARARGS, "Recv a data from specific adjacent node by node index"},
-    {"start_server", (PyCFunction) _start_server, METH_NOARGS, "Start background server"},
-    {"stop_server", (PyCFunction) _stop_server, METH_NOARGS, "Stop background server"},
+static PyMethodDef simu_methods[] = {
+    {"sim_start", (PyCFunction) _sim_start, METH_NOARGS, "start simulater"},
+    {"sim_stop", (PyCFunction) _sim_stop, METH_NOARGS, "stop simulater"},
+    {"sim_update", (PyCFunction) _sim_update, METH_NOARGS, "simulater update"},
+    {"chg_sig", (PyCFunction) _chg_sig, METH_VARARGS, "change signal"},
+    {"get_sig", (PyCFunction) _get_sig, METH_VARARGS, "get signal"},
+    {"get_cont", (PyCFunction) _get_cont, METH_VARARGS, "get contant on edge"},
+    {"show_sm", (PyCFunction) _show_sm, METH_NOARGS, "show simulator"},
     {NULL, NULL, 0, NULL} 
 };
 
-static PyObject *_send_d(PyObject *self, PyObject *args)
+static PyObject *_sim_start(PyObject *self)
 {
-    int n;
     int ret;
-    int len;
-    struct contant d;
-    char *s;
-
-    if (!PyArg_ParseTuple (args, "is#", &n, &(s), &len))
-        return Py_BuildValue ("i", -1);
-
-    dbg_arg ("len: %d\nmsg: %s\n", len, s);
-
-    if (len > 200) {
-        fprintf (stderr, "Input length too long");
-        return Py_BuildValue ("i", -1);
-    }
-
-    strncpy (d.json, s, len);
-    d.json[len] = '\0';
-    ret = send_d (n, d);
+    
+    ret = sim_start ();
 
     return Py_BuildValue ("i", ret);
 }
 
-static PyObject *_recv_d(PyObject *self, PyObject *args)
+static PyObject *_sim_stop(PyObject *self)
 {
+    int ret;
+    
+    ret = sim_stop ();
+
+    return Py_BuildValue ("i", ret);
+}
+
+static PyObject *_sim_update(PyObject *self)
+{
+    int ret;
+    
+    ret = sim_update ();
+
+    return Py_BuildValue ("i", ret);
+}
+
+static PyObject *_chg_sig(PyObject *self, PyObject *args)
+{
+    int ret;
     int n;
-    struct contant d;
+    int s;
+
+    if (!PyArg_ParseTuple (args, "ii", &n, &s))
+        return Py_BuildValue ("i", -1);
+    
+    ret = chg_sig (n, s);
+
+    return Py_BuildValue ("i", ret);
+}
+
+static PyObject *_get_sig(PyObject *self, PyObject *args)
+{
+    int ret;
+    int n;
+
     if (!PyArg_ParseTuple (args, "i", &n))
         return Py_BuildValue ("i", -1);
 
-    d = recv_d (n);
-
-    return Py_BuildValue ("s", d.json);
-}
-
-static PyObject *_start_server(PyObject *self)
-{
-    int ret;
-
-    ret = start_server ();
+    ret = get_sig (n);
 
     return Py_BuildValue ("i", ret);
 }
 
-static PyObject *_stop_server(PyObject *self)
+static PyObject *_get_cont(PyObject *self, PyObject *args)
 {
     int ret;
+    int n;
+    int e;
 
-    ret = stop_server ();
+    if (!PyArg_ParseTuple (args, "ii", &n, &e))
+        return Py_BuildValue ("i", -1);
+
+    ret = get_cont (n, e);
 
     return Py_BuildValue ("i", ret);
+}
+
+static PyObject *_show_sm(PyObject *self)
+{
+    sim_show_sm ();
+
+    return Py_BuildValue ("i", 0);
 }

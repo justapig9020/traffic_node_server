@@ -3,7 +3,7 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-#define DEBUG 0
+//#define DEBUG 0
 #include "libsim.h"
 #include "debug.h"
 #include "conf.h"
@@ -195,9 +195,13 @@ int update(struct simu *sm)
 
         dbg_arg ("updating node %d\n", i);
         nptr = &(sm->nd[i]);
+        dbg_arg ("sig %d\n", nptr->sig);
         eg_update (sm, nptr);
         //puts ("");
         //show_nd (nptr);
+        dbg_arg ("node %d node update\n", i);
+        dbg_arg ("sig %d\n", nptr->sig);
+        dbg_arg ("func: %p\n", &(nptr->update[nptr->sig]));
         nptr->update[nptr->sig] (nptr);
         //puts ("");
         //show_nd (nptr);
@@ -306,4 +310,5 @@ void show_sm(struct simu *sm)
     for (int i=0; i<sm->ndNum; i++) {
         show_nd (&(sm->nd[i]));
     }
+    puts ("");
 }

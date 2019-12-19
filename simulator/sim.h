@@ -6,10 +6,11 @@
 #include "method.h"
 
 int sim_start(void);
-int stop_sim(void);
+int sim_stop(void);
 int sim_update(void);
-int chg_sig(int ,int);
+int chg_sig(int, int);
 int get_sig(int);
 int get_cont(int, int);
+int sim_show_sm(void);
 
 #endif

@@ -1,15 +1,15 @@
-HEADER = libsim.h debug.h conf.h
 
-all: sim.o
+all:
+	python3 setup.py build_ext --inplace 
 
-sim.o: libsim.o method.o
-	gcc -c sim.c libsim.o method.o
+main: libsim.o sim.o method.o
+	gcc -o main main.c libsim.o sim.o method.o
 
-main: main.c libsim.o method.o
-	gcc -g -o main main.c libsim.o method.o
-
-libsim.o: libsim.c $(HEADER)
+libsim.o: 
 	gcc -c libsim.c
 
-method.o: method.c $(HEADER)
+sim.o:
+	gcc -c sim.c
+
+method.o:
 	gcc -c method.c
