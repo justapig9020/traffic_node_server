@@ -270,6 +270,11 @@ void show_car(struct car *cr)
 
 void show_eg(struct edge *eg)
 {
+    if (eg->pr.cp == -1)
+        printf ("# ");
+    else
+        printf ("  ");
+
     printf ("c: %d |  ", eg->cont);
     show_car (eg->cr);
     //printf ("")
@@ -277,8 +282,8 @@ void show_eg(struct edge *eg)
 
 void show_nd(struct node *nd)
 {
-    printf ("\n === Node %d ===", nd->num);
-    printf ("Signal: %d\n", nd->sig);
+    printf ("\n\n === Node %d ===", nd->num);
+    printf (" Signal: %d", nd->sig);
     for (int i=0; i<nd->egNum; i++) {
         if (nd->eg[i].pr.cp == 0)
             continue;
