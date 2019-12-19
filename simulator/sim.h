@@ -5,11 +5,11 @@
 #include "debug.h"
 #include "method.h"
 
-int start_sim(int);
-int sim_update();
-int get_cont(int, int);
+int sim_start(void);
+int stop_sim(void);
+int sim_update(void);
 int chg_sig(int ,int);
 int get_sig(int);
-int stop_sim();
+int get_cont(int, int);
 
 #endif

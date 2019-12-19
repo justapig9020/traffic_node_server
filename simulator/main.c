@@ -26,18 +26,27 @@ void show(struct simu *sm)
 int main(void)
 {
     char c;
+    int n;
+
+    n = 0;
     sm = init_simu ();
 
     add_all_sig (sm, 0, fs0);
     add_all_sig (sm, 1, fs1);
     
     set_cr_gnr (sm, rand_gene);
-    chg_sig(1, 1);
-    chg_sig(3, 1);
+    chg_sig (1, 1);
+    chg_sig (3, 1);
 
     show_sm_conf (sm);
     
     while ((c = getchar()) != 'E') {
+        switch (c) {
+            case 'C':
+                n = !n;
+                chg_sig (2, n);
+            break;
+        }
         if (c == '\n')
             system ("clear");
         update (sm);

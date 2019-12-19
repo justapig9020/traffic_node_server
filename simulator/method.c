@@ -7,6 +7,8 @@
 #include "debug.h"
 
 
+static int c_id = 0;
+
 int enter(struct car *cr, struct edge *eg, struct car **cBuf)
 {
     int ret;
@@ -144,6 +146,9 @@ struct car *rand_gene(struct simu *sm, struct node *nd, int n)
         (*cTail)->onTm = 0;
         (*cTail)->next = NULL;
         (*cTail)->path = NULL;
+        (*cTail)->id = 'A' + c_id;
+        c_id = (c_id+1)%26;
+
         pTail = &((*cTail)->path);
         n = idir;
         dbg_arg ("in dir %d\n", n);

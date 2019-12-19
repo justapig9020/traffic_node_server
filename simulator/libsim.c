@@ -88,7 +88,7 @@ static int eg_update(struct simu *sm, struct node *nptr)
 
         } else if (eptr->pr.cp == -1) { // exit 
             dbg_arg ("edge %d generating car\n", i);
-            if (nptr->eg[i].cr = sm->cr_gnr(sm, nptr, i)) { // generate car to opposite
+            if ((nptr->eg[i].cr = sm->cr_gnr(sm, nptr, i))) { // generate car to opposite
                 nptr->eg[i].cont = nptr->eg[i].pr.p;
             }
             dbg_arg ("%p\n", nptr->eg[i].cr);
@@ -96,7 +96,7 @@ static int eg_update(struct simu *sm, struct node *nptr)
             // dbg ("edge not exist");
         }
     }
-
+    return 0;
 }
 
 struct simu *init_simu()
@@ -218,6 +218,7 @@ int add_all_sig(struct simu *sm, int s, int(*fptr)(struct node *))
     for (int i=0; i<sm->ndNum; i++) {
         add_sig (sm, i, s, fptr);
     }
+    return 0;
 }
 
 
@@ -256,27 +257,33 @@ void show_path(struct path **pt)
     }
 }
 
-void show_car(struct car *cr)
+int show_car(struct car *cr)
 {
     int i;
     i=0;
     while (cr) {
         for (;i<cr->onTm; i++)
             printf ("* ");
-        show_path (&(cr->path));
+        //show_path (&(cr->path));
+        printf ("%c ", cr->id);
         cr = cr->next;
     }
+    return i;
 }
 
 void show_eg(struct edge *eg)
 {
+    int i;
     if (eg->pr.cp == -1)
         printf ("# ");
     else
         printf ("  ");
 
     printf ("c: %d |  ", eg->cont);
-    show_car (eg->cr);
+    i = show_car (eg->cr);
+
+    //for (; i<eg->pr.cp; i++)
+    //    printf ("* ");
     //printf ("")
 }
 

@@ -60,6 +60,7 @@ struct car
     int onTm;
     struct path *path;
     struct car *next;
+    char id;
 };
 
 struct ndbuf
@@ -83,7 +84,7 @@ void show_nd_conf(struct node *);
 void show_sm_conf(struct simu *);
 
 void show_pt(struct path *);
-void show_car(struct car *);
+int show_car(struct car *);
 void show_eg(struct edge *);
 void show_nd(struct node *);
 void show_sm(struct simu *);
