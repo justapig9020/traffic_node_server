@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 
-#define DEBUG 1
+#ifndef DEBUG
+    #define DEBUG 1
+#endif
 
 #if DEBUG
     #define dbg_arg(x,...) printf(x, __VA_ARGS__)

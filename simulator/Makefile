@@ -1,7 +1,10 @@
+HEADER = libsim.h debug.h conf.h
 
+main: main.c libsim.o method.o
+	gcc -o main main.c libsim.o method.o
 
-main: main.c libsim.o
-	gcc -o main main.c libsim.o
-
-libsim.o: libsim.c
+libsim.o: libsim.c $(HEADER)
 	gcc -c libsim.c
+
+method.o: method.c $(HEADER)
+	gcc -c method.c
