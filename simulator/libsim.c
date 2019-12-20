@@ -10,7 +10,7 @@
 
 
 int get_oppo(int n) {
-    return ((n + 1)&1) + (n & ~1);
+    return n^1;
 }
 
 // find node number via ip
