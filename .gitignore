@@ -2,7 +2,8 @@
 !method/
 !connect/
 !simulator/
-!conf/
+!simulator/conf/
+!signal/
 !*.c
 !*.h
 !*.py

@@ -7,6 +7,7 @@
 #include "shmctl.h"
 #include "syn.h"
 
+#if 
 typedef uint64_t addrop_t;
 
 static void *creat_shm(key_t);
