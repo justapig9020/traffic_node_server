@@ -3,15 +3,10 @@ from simu import *
 sim_start ()
 n = 0
 chg_sig (0, 0)
-chg_sig (1, 0)
-chg_sig (2, 0)
-chg_sig (3, 0)
+chg_sig (1, 1)
+chg_sig (2, n)
+chg_sig (3, 1)
 chg_sig (4, 0)
-
-set_fs_func (0, 1, 2)
-set_fs_func (4, 1, 2)
-set_fs_func (1, 0, 2)
-set_fs_func (3, 0, 2)
 
 while True:
     a = input ()
@@ -21,8 +16,7 @@ while True:
         break
     elif a == "c":
         n = n^1
-        for i in range(0, 5):
-            chg_sig (i, n)
+        chg_sig (2, n)
     elif a == "s":
         for i in range(0,5):
             print ("node " + str(i) + " sig: " + str(get_sig(i)))

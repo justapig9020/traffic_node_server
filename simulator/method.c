@@ -2,23 +2,28 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define DEBUG 0
+#define DEBUG 1
 #include "method.h"
 #include "debug.h"
 
 
 static int c_id = 0;
 
+/* 
+   car cr enter next edge eg, cBuf use to buffer the next car of cr
+    return 1 for sucess, 0 for fail
+*/
 int enter(struct car *cr, struct edge *eg, struct car **cBuf)
 {
     int ret;
 
-    puts ("leaving");
+    dbg ("leaving");
     ret = 0;
-    if (!eg) {
+    if (!eg) { // car exit the system
         ret = 1;
         *cBuf = cr->next;
         free (cr);
+        cr = NULL;
     } else if (eg->cont < eg->pr.cp) {
         struct car **cptr;
         struct path *pbuf;
@@ -42,23 +47,25 @@ int enter(struct car *cr, struct edge *eg, struct car **cBuf)
 
         cptr = NULL;
         eg->cont++;
-    } else {
-        if (eg)
-            printf ("%d %d\n", eg->cont, eg->pr.cp);
-        else 
-            puts ("no path");
-    }
+    } 
+
     return ret;
 }
 
+/*
+    car cr leave an edge eg, and update eg's parameter
+*/
 int leave(struct car *cr, struct edge *eg)
 {
-    printf ("leaved\n");
+    dbg ("leaved\n");
     eg->cr = cr;
     eg->cont--;
     return 0;
 }
 
+/*
+    signal of each edge turns green with it's opposite edge
+*/
 int strt(struct node *nd, int d)
 {
     int toD;    // direction
@@ -72,22 +79,22 @@ int strt(struct node *nd, int d)
         nd->eg[d].cr->onTm==0 && // car arrived node
         i<nd->eg[d].pr.p) { //  p car per turn
 
-        to = NULL;
+        to = NULL; // to = NULL mean this is the last node
         if (nd->eg[d].cr->path) {
             toD = nd->eg[d].cr->path->n;
             fromD = get_oppo (toD);
-            printf ("%d %d\n", toD, fromD);
+            dbg_arg ("%d %d\n", toD, fromD);
             to = &(nd->eg[toD].from->eg[fromD]);
-            printf ("from %d, to %d\n", nd->num, nd->eg[toD].from->num);
+            dbg_arg ("from %d, to %d\n", nd->num, nd->eg[toD].from->num);
         } else {
-            puts ("exit");
+            dbg ("exit");
         }
     
 
         if (enter (nd->eg[d].cr, to, &cBuf)) {
             leave (cBuf, &(nd->eg[d]));
         } else {
-            printf ("leave failed\n");
+            dbg ("leave failed\n");
             return i;
         }
         
@@ -98,7 +105,7 @@ int strt(struct node *nd, int d)
 
 int fs0(struct node *nd)
 {
-    printf ("node %d fs %d\n", nd->num, nd->sig);
+    dbg_arg ("node %d fs %d\n", nd->num, nd->sig);
     for (int i=0; i<2; i++) { // phase 0: edge 0, 1
         if (nd->eg[i].pr.cp == 0) // no edge
             continue;
@@ -109,11 +116,26 @@ int fs0(struct node *nd)
 
 int fs1(struct node *nd)
 {
-    printf ("node %d fs %d\n", nd->num, nd->sig);
+    dbg_arg ("node %d fs %d\n", nd->num, nd->sig);
     for (int i=2; i<4; i++) { // phase 1: edge 2, 3
         if (nd->eg[i].pr.cp == 0) // no edge
             continue;
         strt (nd, i);
+    }
+    return 0;
+}
+
+
+/*
+    force car exit the system when it reach the terminal node
+*/
+int frs_out(struct node *nd)
+{
+    dbg_arg ("node %d fs %d force out\n", nd->num, nd->sig);
+    for (int i=0; i<nd->egNum; i++) {
+        if (nd->eg[i].pr.cp == 0 || nd->eg[i].pr.cp == -1)
+            continue;
+        strt (nd,i);
     }
     return 0;
 }

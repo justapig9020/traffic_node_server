@@ -13,6 +13,7 @@ int sim_start(void)
 
     add_all_sig (sm, 0, fs0); // set phase 0 method
     add_all_sig (sm, 1, fs1); // set phase 1 method
+
     set_cr_gnr (sm, rand_gene); // set car generation function
 
     return 0;
@@ -21,6 +22,23 @@ int sim_start(void)
 int sim_stop(void)
 {
     return free_simu (sm);
+}
+
+int set_fs_func(int n, int s, int f)
+{
+    printf (" set_func %d\n", f);
+    switch (n) {
+        case NUF_FS0:
+            add_sig (sm, n, s, fs0);
+        break;
+        case NUF_FS1:
+            add_sig (sm, n, s, fs1);
+        break;
+        case NUF_FRSO:
+            add_sig (sm, n, s, frs_out);
+        break;
+    }
+    return 0;
 }
 
 int sim_update(void)

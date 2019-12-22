@@ -10,6 +10,7 @@ static PyMethodDef simu_methods[];
 
 static PyObject *_sim_start(PyObject *self);
 static PyObject *_sim_stop(PyObject *self);
+static PyObject *_set_fs_func(PyObject *self, PyObject *args);
 static PyObject *_sim_update(PyObject *self);
 static PyObject *_chg_sig(PyObject *self, PyObject *args);
 static PyObject *_get_sig(PyObject *self, PyObject *args);
@@ -40,6 +41,7 @@ static struct PyModuleDef simu_module = {
 static PyMethodDef simu_methods[] = {
     {"sim_start", (PyCFunction) _sim_start, METH_NOARGS, "start simulater"},
     {"sim_stop", (PyCFunction) _sim_stop, METH_NOARGS, "stop simulater"},
+    {"set_fs_func", (PyCFunction) _set_fs_func, METH_VARARGS, "set node phase update function"},
     {"sim_update", (PyCFunction) _sim_update, METH_NOARGS, "simulater update"},
     {"chg_sig", (PyCFunction) _chg_sig, METH_VARARGS, "change signal"},
     {"get_sig", (PyCFunction) _get_sig, METH_VARARGS, "get signal"},
@@ -62,6 +64,21 @@ static PyObject *_sim_stop(PyObject *self)
     int ret;
     
     ret = sim_stop ();
+
+    return Py_BuildValue ("i", ret);
+}
+
+static PyObject *_set_fs_func(PyObject *self, PyObject *args)
+{
+    int ret;
+    int n;
+    int s;
+    int f;
+
+    if (!PyArg_ParseTuple (args, "iii", &n, &s, &f))
+        return Py_BuildValue ("i", -1);
+    
+    ret = set_fs_func (n, s, f);
 
     return Py_BuildValue ("i", ret);
 }

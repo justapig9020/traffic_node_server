@@ -7,6 +7,7 @@
 
 int sim_start(void);
 int sim_stop(void);
+int set_fs_func(int, int, int);
 int sim_update(void);
 int chg_sig(int, int);
 int get_sig(int);
