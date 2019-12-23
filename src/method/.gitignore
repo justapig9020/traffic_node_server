@@ -1,6 +1,5 @@
 *
 !.gitignore
-!*.c
-!*.h
+!*.py
 !.*sh
 !Makefile

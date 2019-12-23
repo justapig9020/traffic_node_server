@@ -1,3 +1,0 @@
-DIR = ../../src/connect/
-
-all:

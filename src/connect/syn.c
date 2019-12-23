@@ -6,6 +6,7 @@
 #include <sys/ipc.h> 
 #include "syn.h"
 
+#ifdef semun
 union semun {
     int              val;    /* Value for SETVAL */
     struct semid_ds *buf;    /* Buffer for IPC_STAT, IPC_SET */
@@ -13,6 +14,7 @@ union semun {
     struct seminfo  *__buf;  /* Buffer for IPC_INFO
 							    (Linux-specific) */
 };
+#endif
 
 mut_t creat_mut (key_t key)
 {
