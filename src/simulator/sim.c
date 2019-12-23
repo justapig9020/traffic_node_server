@@ -49,3 +49,9 @@ int sim_show_sm(void)
     show_sm (sm);
     return 0;
 }
+
+int sim_show_rt(void)
+{
+    show_rt(sm);
+    return 0;
+}

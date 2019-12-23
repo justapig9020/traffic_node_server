@@ -7,16 +7,21 @@
 #include "debug.h"
 
 
+#if DEBUG == 4
+static int g_total = 0;
+static int long_p = 0;
+#endif
+
 static int c_id = 0;
 
 int enter(struct car *cr, struct edge *eg, struct car **cBuf)
 {
     int ret;
 
-    puts ("leaving");
+    //dbg ("leaving");
     ret = 0;
     if (!eg) {
-        ret = 1;
+        ret = -1;
         *cBuf = cr->next;
         free (cr);
     } else if (eg->cont < eg->pr.cp) {
@@ -44,19 +49,30 @@ int enter(struct car *cr, struct edge *eg, struct car **cBuf)
         eg->cont++;
     } else {
         if (eg)
-            printf ("%d %d\n", eg->cont, eg->pr.cp);
-        else 
-            puts ("no path");
+             dbg_arg_n (1, "%d %d\n", eg->cont, eg->pr.cp);
+        //else 
+            //dbg ("no path");
     }
     return ret;
 }
 
 int leave(struct car *cr, struct edge *eg)
 {
-    printf ("leaved\n");
+    //dbg ("leaved\n");
     eg->cr = cr;
     eg->cont--;
     return 0;
+}
+
+static void update_rate (struct node *nd, int toD, int d)
+{
+    if (toD == get_oppo(d))
+        nd->r.fw++;
+    else if ((toD&1&d) != d/2)
+        nd->r.lf++;
+    else
+        nd->r.rt++;
+    nd->r.total++;
 }
 
 int strt(struct node *nd, int d)
@@ -64,8 +80,10 @@ int strt(struct node *nd, int d)
     int toD;    // direction
     int fromD;
     int i;     // lunch car counter 
+    int turn;
     struct car *cBuf;
     struct edge *to;
+    int exit;
 
     i=0; 
     while (nd->eg[d].cr && // car exist
@@ -76,21 +94,21 @@ int strt(struct node *nd, int d)
         if (nd->eg[d].cr->path) {
             toD = nd->eg[d].cr->path->n;
             fromD = get_oppo (toD);
-            printf ("%d %d\n", toD, fromD);
+             dbg_arg_n (1, "%d %d\n", toD, fromD);
             to = &(nd->eg[toD].from->eg[fromD]);
-            printf ("from %d, to %d\n", nd->num, nd->eg[toD].from->num);
+             dbg_arg_n (1, "from %d, to %d\n", nd->num, nd->eg[toD].from->num);
         } else {
-            puts ("exit");
+           // dbg ("exit");
         }
     
-
-        if (enter (nd->eg[d].cr, to, &cBuf)) {
+        if ((exit = enter (nd->eg[d].cr, to, &cBuf))) {
+            if (exit != -1)
+                update_rate(nd, toD, d);
             leave (cBuf, &(nd->eg[d]));
         } else {
-            printf ("leave failed\n");
+            // dbg ("leave failed\n");
             return i;
         }
-        
         i++;
     }
     return i;
@@ -98,7 +116,7 @@ int strt(struct node *nd, int d)
 
 int fs0(struct node *nd)
 {
-    printf ("node %d fs %d\n", nd->num, nd->sig);
+     dbg_arg_n (1, "node %d fs %d\n", nd->num, nd->sig);
     for (int i=0; i<2; i++) { // phase 0: edge 0, 1
         if (nd->eg[i].pr.cp == 0) // no edge
             continue;
@@ -109,13 +127,36 @@ int fs0(struct node *nd)
 
 int fs1(struct node *nd)
 {
-    printf ("node %d fs %d\n", nd->num, nd->sig);
+     dbg_arg_n (1, "node %d fs %d\n", nd->num, nd->sig);
     for (int i=2; i<4; i++) { // phase 1: edge 2, 3
         if (nd->eg[i].pr.cp == 0) // no edge
             continue;
         strt (nd, i);
     }
     return 0;
+}
+
+static void show_path (struct path *path)
+{
+    while (path) {
+        dbg_arg_n (2, "%d ", path->n);
+        path = path->next;
+    }
+    dbg ("\n");
+}
+
+static int rand_next(int n, int num)
+{
+    return (n + (rand() % (num -1)) + 1) % (num);
+}
+
+static int mrst_next(int n, int num) // more streight
+{
+    int d;
+    d = rand()%num;
+    if (d == n)
+        d = get_oppo (d);
+    return d;
 }
 
 struct car *rand_gene(struct simu *sm, struct node *nd, int n)
@@ -125,7 +166,11 @@ struct car *rand_gene(struct simu *sm, struct node *nd, int n)
     struct car **cTail;
     struct path **pTail;
     int idir;           // in direction
+    int (*f)(int, int);
 
+    f = mrst_next; // set next function
+
+    dbg_arg_n (2, "node %d:\n", nd->num);
     if (nd->sig != n/2) // exit direction not green light
         return NULL;
 
@@ -135,9 +180,11 @@ struct car *rand_gene(struct simu *sm, struct node *nd, int n)
     cTail = &(c);
     idir = n;
 
-    dbg_arg ("lunch %d cars\n", nd->eg[n].pr.p);
+    dbg_arg_n (1, "lunch %d cars\n", nd->eg[n].pr.p);
     for (int i=0; i<nd->eg[n].pr.p; i++) {
         struct node *nptr;
+        int c;
+        c = 0;
 
         nptr = nd;
         *cTail = malloc (sizeof(struct car));
@@ -150,20 +197,29 @@ struct car *rand_gene(struct simu *sm, struct node *nd, int n)
 
         pTail = &((*cTail)->path);
         n = idir;
-        dbg_arg ("in dir %d\n", n);
+        dbg_arg_n (1, "in dir %d\n", n);
         do {
+            dbg_arg_n (2, "(%d)", n);
             do {
-                d = (n + (rand() % 3) + 1) % 4;
+                d = f (n, nptr->egNum);
             } while (nptr->eg[d].pr.cp < 1);
-            dbg_arg ("dir %d, node %d\n", d, nptr->adj[d]);
+             dbg_arg_n (1, "dir %d, node %d\n", d, nptr->adj[d]);
             (*pTail) = malloc (sizeof(struct path));
             (*pTail)->n = d;
             (*pTail)->next = NULL;
             pTail = &((*pTail)->next);
             nptr = nptr->eg[d].from;
-            n = get_oppo (n);
-            //show_nd_conf (nptr);
+            n = get_oppo (d);
+            c++;
         } while (nptr->type != N_EXIT); // find path until eixt
+        //dbg ("");
+        //show_path ((*cTail)->path);
+#if DEBUG == 4
+        g_total++;
+        if (c>=3)
+            long_p++;
+        printf ("long rate: %lf\n", (double)long_p/g_total);
+#endif
         cTail = &((*cTail)->next);
         nptr = NULL;
     }

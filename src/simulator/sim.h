@@ -12,5 +12,6 @@ int chg_sig(int, int);
 int get_sig(int);
 int get_cont(int, int);
 int sim_show_sm(void);
+int sim_show_rt(void);
 
 #endif

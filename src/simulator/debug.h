@@ -9,9 +9,12 @@
 
 #if DEBUG
     #define dbg_arg(x,...) printf(x, __VA_ARGS__)
+    #define dbg_arg_n(n,x,...) if(DEBUG & n) \
+                                printf (x, __VA_ARGS__)
     #define dbg(x) puts(x)
 #else
     #define dbg_arg(x,...) 
+    #define dbg_arg_n(n,x,...)
     #define dbg(x)
 #endif
 

@@ -3,11 +3,14 @@
 #include <string.h>
 #include <arpa/inet.h>
 
-//#define DEBUG 0
+#define DEBUG 0
 #include "libsim.h"
 #include "debug.h"
 #include "conf.h"
 
+
+int sw_tbl[] = {2, 3};
+//int sw_tbl[] = {0, 1, 2, 3, 4, 5, 6, 7};
 
 int get_oppo(int n) {
     return n^1;
@@ -122,6 +125,10 @@ struct simu *init_simu()
         fscanf (fd, "%s", s);
         sm->nd[i].ip = inet_addr (s); // set ip as int
         sm->nd[i].num = i;            // set node number
+        sm->nd[i].r.total = 0;
+        sm->nd[i].r.fw = 0;
+        sm->nd[i].r.rt = 0;
+        sm->nd[i].r.lf = 0;
     }
 
     fclose (fd);
@@ -197,15 +204,10 @@ int update(struct simu *sm)
         nptr = &(sm->nd[i]);
         dbg_arg ("sig %d\n", nptr->sig);
         eg_update (sm, nptr);
-        //puts ("");
-        //show_nd (nptr);
         dbg_arg ("node %d node update\n", i);
         dbg_arg ("sig %d\n", nptr->sig);
         dbg_arg ("func: %p\n", &(nptr->update[nptr->sig]));
         nptr->update[nptr->sig] (nptr);
-        //puts ("");
-        //show_nd (nptr);
-        //getchar ();
     }
     return 0;
 }
@@ -304,11 +306,25 @@ void show_nd(struct node *nd)
 }
 
 
+void show_rt(struct simu *sm)
+{
+    int n;
+    n = arr_sz(sw_tbl);
+    for (int i=0; i<n; i++) {
+        struct rate *r;
+        r = &(sm->nd[sw_tbl[i]].r);
+        printf ("node %d  F: %lf, R: %lf, L: %lf\n", sw_tbl[i], (double)r->fw/r->total, (double)r->rt/r->total, (double)r->lf/r->total);
+    }
+}
+
 void show_sm(struct simu *sm)
 {
+    int n;
+    n = arr_sz(sw_tbl);
     printf ("==== Show simulater ====\n");
-    for (int i=0; i<sm->ndNum; i++) {
-        show_nd (&(sm->nd[i]));
+    for (int i=0; i<n; i++) {
+        show_nd (&(sm->nd[sw_tbl[i]]));
     }
     puts ("");
+    show_rt (sm);
 }

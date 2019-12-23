@@ -1,12 +1,14 @@
 #ifndef _LIBSIM_H_
 #define _LIBSIM_H_
 
+#define arr_sz(arr) sizeof(arr)/sizeof(arr[0])
 enum{
     N_EXIT,
     N_CROS
 };
 
 struct simu;
+struct rate;
 struct node;
 struct edge;
 struct egpr;
@@ -21,6 +23,14 @@ struct simu
     struct car *(*cr_gnr)(struct simu *, struct node *, int);
 };
 
+struct rate // traffic rate
+{
+    int total;
+    int fw;
+    int rt;
+    int lf;
+};
+
 struct node
 {
     int num;
@@ -31,6 +41,7 @@ struct node
     int ip;
     int fs;         // phase
     int sig;        // signal status
+    struct rate r;
     int (**update)(struct node *); // update function
 };
 
@@ -88,6 +99,7 @@ int show_car(struct car *);
 void show_eg(struct edge *);
 void show_nd(struct node *);
 void show_sm(struct simu *);
+void show_rt(struct simu *);
 
 
 #endif
