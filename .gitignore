@@ -1,13 +1,1 @@
-*
-!src/
-!method/
-!connect/
-!simulator/
-!simulator/conf/
-!signal/
-!*.c
-!*.h
-!*.py
-!Makefile
-!.gitignore
-!*.sh
+trash/
