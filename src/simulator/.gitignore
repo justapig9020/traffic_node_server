@@ -5,3 +5,5 @@
 !.*sh
 !Makefile
 !setup.py
+!conf/
+!conf/*
