@@ -2,4 +2,6 @@
 !.gitignore
 !*.py
 !*.sh
+!lcd/
+!sig/
 !Makefile
