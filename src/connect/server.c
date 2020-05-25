@@ -60,8 +60,7 @@ void server_active(int sd, struct shmpg *shm)
         int i;
 
         bzero (&d, sizeof(struct contant));
-        recvfrom (sd, &d, sizeof(struct contant), 0, (struct sockaddr *)&clt_addr, &clt_len);
-        
+        recvfrom (sd, &d, sizeof(struct contant), 0, (struct sockaddr *)&clt_addr, &clt_len); 
         dbg_arg ("ip_in: %d\n", clt_addr.sin_addr.s_addr);
         dbg_arg ("ANY: %d\n", htonl (INADDR_ANY));
         if (clt_addr.sin_addr.s_addr == 16777343) { // Server contral operation
@@ -117,6 +116,7 @@ struct shmpg *exec_server()
     FILE *fd;
     int n;
     int sd;
+    char c[16];
     pid_t id;
 
     fd = fopen ("./adj_table", "r");
@@ -125,7 +125,7 @@ struct shmpg *exec_server()
         return (struct shmpg *)-1;
     }
     
-    fscanf (fd, "%d", &n);
+    fscanf (fd, "%d", &n); // get adj nodes number
     printf ("Adj node number: %d\n", n);
     while (1) {
         puts ("Create shmpg");
@@ -140,13 +140,25 @@ struct shmpg *exec_server()
         }
     }
 
+    // read adj nodes ip
     for (int i=0; i<n; i++) {
-        char c[16];
+        bzero (c, sizeof(c));
         printf ("node %d ", i);
         fscanf (fd, "%s", c);
-        printf ("ip: %s\n", c);
-        shm->adj[i].ip = inet_addr (c);
+        if (strncmp (c, "NULL", 16)) {
+            puts ("NULL");
+            shm->adj[i].ip = -1;
+        } else {
+            printf ("ip: %s\n", c);
+            shm->adj[i].ip = inet_addr (c);
+        }
     }
+
+#if MONITOR
+    bzero (c, sizeof(c));
+    fscanf (fd, "%s", c);
+    shm->mip = inet_addr (c);
+#endif
 
     fclose (fd);
     fd = NULL;

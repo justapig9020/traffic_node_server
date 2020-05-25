@@ -41,11 +41,14 @@ struct shmpg {
     char alive;                     // 0 for died, 1 for alive
     key_t key;                      // The key of shared memory
     void *end;                      // Point to the last byte of the page
-    struct shmpg *nextPg; 
+    struct shmpg *nextPg;           // Point to the next shmpg if exist
     void *hPtr;                     // Point to the top of heap
     struct bin *chunk[BIN_TYPES];   // Chunks of recycled bins
-    int adjNum;
-    struct node adj[1];            // Array of adjacent nodes info
+#if MONITOR
+    int mip;                        // Monitor ip
+#endif
+    int adjNum;                     // The number of adj nodes
+    struct node adj[1];             // Array of adjacent nodes info
 };
 
 /* 

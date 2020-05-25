@@ -1,7 +1,1 @@
-*
-!*.c
-!*.h
-!*.py
-!Makefile
-!.gitignore
-!*.sh
+trash/
